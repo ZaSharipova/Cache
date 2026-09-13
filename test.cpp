@@ -1,6 +1,11 @@
 #include "lru_cache.hpp"
 #include "lfu_cache.hpp"
 #include "2Qcache.hpp"
+#include "opt.hpp"
+
+#include <iostream>
+#include <cassert>
+#include <vector>
 
 void TestLRU() {
     {
@@ -117,10 +122,48 @@ void TestTwoQ() {
     std::cout << "2Q tests passed\n";
 }
 
+void TestOPT() {
+    {
+        std::vector<int> trace = {1, 2, 3, 1, 2, 3, 1, 2, 3};
+        assert(OPT(trace, 2) == 3);
+    }
+    {
+        std::vector<int> trace = {1, 1, 1, 1};
+        assert(OPT(trace, 2) == 3);
+    }
+
+    {
+        const size_t num_traces = 5;
+        const size_t trace_length = 1000;
+        const int key_range = 20;
+        const size_t cache_size = 8;
+
+        srand(42);
+        for (size_t k = 0; k < num_traces; k++) {
+            std::vector<int> trace;
+            for (size_t i = 0; i < trace_length; i++) {
+                trace.push_back(rand() % key_range + 1);
+            }
+
+            LRUCache lru(cache_size);
+            for (size_t i = 0; i < trace.size(); i++) {
+                if (!lru.Get(trace[i]).has_value()) {
+                    lru.Put(trace[i], trace[i]);
+                }
+            }
+
+            assert(OPT(trace, cache_size) >= lru.GetHits());
+        }
+    }
+
+    std::cout << "OPT tests passed\n";
+}
+
 int main(void) {
     TestLRU();
     TestLFU();
     TestTwoQ();
+    TestOPT();
     std::cout << "\nAll tests passed\n";
     return 0;
 }

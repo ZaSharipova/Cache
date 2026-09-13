@@ -5,6 +5,6 @@
 #include <vector>
 #include <unordered_set>
 
-size_t OPT(std::vector<int> trace, size_t cache_size);
+size_t OPT(const std::vector<int>& trace, size_t cache_size);
 
-#endif OPT_H_
+#endif // OPT_H_
