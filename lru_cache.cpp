@@ -4,8 +4,6 @@
 #include <list>
 #include <optional>
 
-// const int DEFAULT_CAPACITY = 100;
-
 std::optional<int> LRUCache::Get(int key) {
     auto it = values_.find(key);
     if (it == values_.end()) {
