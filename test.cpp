@@ -144,10 +144,10 @@ TEST(OptTest, OptimalIsUpperBoundForLRU) {
     const size_t cache_size = 8;
 
     srand(42);
-    for (size_t k = 0; k < num_traces; ++k) {
+    for (size_t k = 0; k < num_traces; k++) {
         std::vector<int> trace;
         trace.reserve(trace_length);
-        for (size_t i = 0; i < trace_length; ++i) {
+        for (size_t i = 0; i < trace_length; i++) {
             trace.push_back(rand() % key_range + 1);
         }
 

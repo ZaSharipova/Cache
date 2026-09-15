@@ -30,3 +30,11 @@ add_executable(test_multilevel_cache
 )
 target_link_libraries(test_multilevel_cache PRIVATE GTest::gtest_main)
 gtest_discover_tests(test_multilevel_cache)
+
+add_executable(test_lirs
+    test_lirs.cpp
+    lirs_cache.cpp
+    ${CACHE_SOURCES}
+)
+target_link_libraries(test_lirs PRIVATE GTest::gtest_main)
+gtest_discover_tests(test_lirs)
