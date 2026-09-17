@@ -91,8 +91,8 @@ private:
         Key& entry = table_.at(key);
         RemoveFromQueue(entry);
         entry.is_lir = true;
-        MoveToStackTop(key);
         lir_count_++;
+        MoveToStackTop(key);
         DemoteLIRFromBottom();
     }
 

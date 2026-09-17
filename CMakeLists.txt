@@ -14,6 +14,7 @@ set(CACHE_SOURCES
     lru_cache.cpp
     lfu_cache.cpp
     2Qcache.cpp
+    lirs_cache.cpp
     opt.cpp
 )
 
@@ -33,8 +34,19 @@ gtest_discover_tests(test_multilevel_cache)
 
 add_executable(test_lirs
     test_lirs.cpp
-    lirs_cache.cpp
     ${CACHE_SOURCES}
 )
 target_link_libraries(test_lirs PRIVATE GTest::gtest_main)
 gtest_discover_tests(test_lirs)
+
+add_executable(invariant_tests
+    invariant_tests.cpp
+    ${CACHE_SOURCES}
+)
+target_link_libraries(invariant_tests PRIVATE GTest::gtest_main)
+gtest_discover_tests(invariant_tests)
+
+add_executable(benchmarks
+    benchmarks.cpp
+    ${CACHE_SOURCES}
+)

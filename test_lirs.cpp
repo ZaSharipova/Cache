@@ -1,4 +1,5 @@
 #include "lirs_cache.hpp"
+#include "opt.hpp"
 
 #include <gtest/gtest.h>
 
@@ -111,4 +112,29 @@ TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
 
     EXPECT_FALSE(cache.Get(100).has_value());
     EXPECT_TRUE(cache.Get(1).has_value());
+}
+
+TEST(LIRSCacheTest, OptimalIsUpperBound) {
+    const size_t num_traces = 5;
+    const size_t trace_length = 1000;
+    const int key_range = 20;
+    const size_t cache_size = 8;
+
+    srand(42);
+    for (size_t k = 0; k < num_traces; k++) {
+        std::vector<int> trace;
+        trace.reserve(trace_length);
+        for (size_t i = 0; i < trace_length; i++) {
+            trace.push_back(rand() % key_range + 1);
+        }
+
+        LIRSCache lirs(cache_size);
+        for (int key : trace) {
+            if (!lirs.Get(key).has_value()) {
+                lirs.Put(key, key);
+            }
+        }
+
+        EXPECT_GE(OPT(trace, cache_size), lirs.GetHits()) << "failed on trace #" << k;
+    }
 }
