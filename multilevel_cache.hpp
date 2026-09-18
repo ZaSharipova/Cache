@@ -34,11 +34,11 @@ public:
 
     void Put(int key, int value) {
         cache_l1_.Put(key, value);
-        cache_l2_.Put(key, value);
+        cache_l2_.Put(key, value); // дублирую, потому что использую inclusive способ решения проблемы удаления данных при вытеснении из L1
     }
 
     size_t GetCost() const {
-            return hits_l1_ * 1 + hits_l2_ * 10 + misses_ * 100;
+        return hits_l1_ * 1 + hits_l2_ * 10 + misses_ * 100;
     }
 
     size_t GetHitsL1() const {

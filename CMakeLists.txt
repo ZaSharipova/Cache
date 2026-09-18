@@ -47,6 +47,13 @@ target_link_libraries(invariant_tests PRIVATE GTest::gtest_main)
 gtest_discover_tests(invariant_tests)
 
 add_executable(benchmarks
+    subsidiary.cpp
     benchmarks.cpp
+    ${CACHE_SOURCES}
+)
+
+add_executable(benchmarks_multilevel
+    subsidiary.cpp
+    benchmarks_multilevel.cpp
     ${CACHE_SOURCES}
 )

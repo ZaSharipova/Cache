@@ -4,6 +4,8 @@
 #include "lirs_cache.hpp"
 #include "opt.hpp"
 
+#include "subsidiary.hpp"
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -16,23 +18,6 @@ std::vector<int> MakeScan(int num_keys, int length) { // TODO it's probably bett
     trace.reserve(length);
     for (int i = 0; i < length; i++) {
         trace.push_back(i % num_keys + 1);
-    }
-
-    return trace;
-}
-
-std::vector<int> MakeHot(int num_keys, int length, unsigned seed) {
-    srand(seed);
-
-    std::vector<int> trace;
-
-    trace.reserve(length);
-    for (int i = 0; i < length; i++) {
-        if (rand() % 100 < 80) {
-            trace.push_back(rand() % 10 + 1);
-        } else {
-            trace.push_back(rand() % num_keys + 1);
-        }
     }
 
     return trace;

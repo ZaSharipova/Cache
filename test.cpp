@@ -97,6 +97,19 @@ TEST(TwoQCacheTest, BasicPutGet) {
     EXPECT_EQ(cache.Get(1).value_or(-1), 10);
 }
 
+TEST(TwoQCacheTest, SmallCapacity) {
+    TwoQCache cache(3);
+
+    for (int k = 1; k <= 20; k++) {
+        if (!cache.Get(k).has_value()) {
+            cache.Put(k, k * 10);
+        }
+    }
+
+    cache.Put(99, 990);
+    EXPECT_EQ(cache.Get(99).value_or(-1), 990);
+}
+
 TEST(TwoQCacheTest, GetMissingReturnsNullopt) {
     TwoQCache cache(8);
     EXPECT_FALSE(cache.Get(99).has_value());

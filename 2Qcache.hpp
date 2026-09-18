@@ -8,9 +8,9 @@
 
 class TwoQCache {
 public:
-    TwoQCache(size_t capacity) : a1in_limit_(capacity / 4),
-                                 am_limit_(capacity - capacity / 4),
-                                 a1out_limit_(capacity / 2) {}
+    TwoQCache(size_t capacity) : a1in_limit_(capacity / 4 > 0 ? capacity / 4 : 1),
+                                 am_limit_(capacity - (capacity / 4 > 0 ? capacity / 4 : 1)),
+                                 a1out_limit_(capacity / 2 > 0 ? capacity / 2 : 1) {}
 
     std::optional<int> Get(int key);
     void Put(int key, int value);
