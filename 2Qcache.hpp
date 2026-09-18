@@ -5,6 +5,21 @@
 #include <list>
 #include <optional>
 #include <cassert>
+#include <unordered_map>
+
+enum class Location {
+    kAm,
+    kA1in,
+    kA1out,
+    kNone,
+};
+
+struct Entry {
+    int value;
+    Location location;
+    std::list<std::pair<int, int>>::iterator data_it;
+    std::list<int>::iterator ghost_it;
+};
 
 class TwoQCache {
 public:
@@ -20,6 +35,8 @@ public:
     size_t GetEvictions() const;
 
 private:
+
+    std::unordered_map<int, Entry> table_;
     //const size_t capacity_;
     const size_t a1in_limit_;
     const size_t am_limit_;

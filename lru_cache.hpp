@@ -7,15 +7,10 @@
 class LRUCache {
 private:
     size_t capacity_;
-    std::list<int> order_; // ключи в порядке использования
-    std::unordered_map<int, int> values_; // ключ -> значение
+    std::list<std::pair<int, int>> order_;
+    std::unordered_map<int, std::list<std::pair<int, int>>::iterator> pos_;
 
     size_t hits_ = 0, misses_ = 0, evictions_ = 0;
-
-    void MoveToBegin(int key) {
-        order_.remove(key);
-        order_.push_front(key);
-    }
 
 public:
     LRUCache(size_t capacity) : capacity_(capacity) {}

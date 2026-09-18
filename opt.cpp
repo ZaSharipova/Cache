@@ -4,7 +4,7 @@
 #include <vector>
 #include <unordered_set>
 
-size_t OPT(const std::vector<int>& trace, size_t cache_size) {
+size_t OPT(const std::vector<int>& trace, size_t cache_size) { // TODO precalculation
     std::unordered_set<int> cache(cache_size);
     size_t hits = 0;
 
