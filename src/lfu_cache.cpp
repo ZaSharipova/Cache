@@ -8,15 +8,17 @@ std::optional<int> LFUCache::Get(int key) {
     }
 
     hits_++;
-    it->second.second++; // как бы появнее это написать
-    return it->second.first;
+    Entry& entry = it->second;
+    entry.frequency++;
+    return entry.value;
 }
 
 void LFUCache::Put(int key, int value) {
     auto it = data_.find(key);
     if (it != data_.end()) {
-        it->second.first = value;
-        it->second.second++;
+        Entry& entry = it->second;
+        entry.value = value;
+        entry.frequency++;
         return;
     }
 
@@ -26,12 +28,12 @@ void LFUCache::Put(int key, int value) {
         bool found_flag = false;
 
         for (auto it : data_) {
-            if (it.second.second < min_frequency) {
-                min_frequency = it.second.second;
+            Entry& entry = it.second;
+            if (entry.frequency < min_frequency) {
+                min_frequency = entry.frequency;
                 victim = it.first;
                 found_flag = true;
             }
-
         }
 
         if (found_flag) {

@@ -1,6 +1,6 @@
 #include "lfu_cache.hpp"
 #include "2Qcache.hpp"
-#include "lirs_cache.hpp" // it seems lirs to be included somewhere multiple times FIXME
+#include "lirs_cache.hpp"
 #include "lru_cache.hpp"
 #include "opt.hpp"
 
@@ -10,6 +10,11 @@
 #include <vector>
 
 namespace {
+const size_t num_traces = 5;
+const size_t trace_length = 1000;
+const int key_range = 20;
+const size_t cache_size = 8;
+const size_t starting_seed = 42;
 
 std::vector<int> MakeRandomTrace(size_t length, int key_range, unsigned seed) {
     srand(seed);
@@ -44,13 +49,8 @@ class InvariantTest : public ::testing::Test {};
 TYPED_TEST_SUITE(InvariantTest, CacheTypes);
 
 TYPED_TEST(InvariantTest, OptIsUpperBound) {
-    const size_t num_traces = 5;
-    const size_t trace_length = 1000;
-    const int key_range = 20;
-    const size_t cache_size = 8;
-
     for (size_t k = 0; k < num_traces; k++) {
-        std::vector<int> trace = MakeRandomTrace(trace_length, key_range, 42 + k);
+        std::vector<int> trace = MakeRandomTrace(trace_length, key_range, starting_seed + k);
         TypeParam cache(cache_size);
         size_t hits = RunAndGetHits(cache, trace);
 

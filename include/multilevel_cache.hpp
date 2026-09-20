@@ -38,7 +38,7 @@ public:
     }
 
     size_t GetCost() const {
-        return hits_l1_ * 1 + hits_l2_ * 10 + misses_ * 100;
+        return hits_l1_ * hit_l1_value + hits_l2_ * hit_l2_value + misses_ * miss_value;
     }
 
     size_t GetHitsL1() const {
@@ -57,6 +57,10 @@ private:
     c1 cache_l1_;
     c2 cache_l2_;
     size_t hits_l1_ = 0, hits_l2_ = 0, misses_ = 0;
+
+    static constexpr size_t hit_l1_value = 1;
+    static constexpr size_t hit_l2_value = 10;
+    static constexpr size_t miss_value = 100;
 };
 
 #endif // MULTILEVEL_CACHE_H_

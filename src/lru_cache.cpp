@@ -20,7 +20,7 @@ std::optional<int> LRUCache::Get(int key) {
 void LRUCache::Put(int key, int value) {
     auto it = pos_.find(key);
     if (it != pos_.end()) {
-        it->second->second = value; // TODO function for
+        it->second->second = value; // если честно не знаю, насколько уместно здесь на entry переходить
         order_.splice(order_.begin(), order_, it->second);
         return;
     }

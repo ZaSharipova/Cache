@@ -91,7 +91,7 @@ TEST(LIRSCacheTest, FrequentlyAccessedKeySurvivesScan) {
     cache.Get(1);
     cache.Get(1);
 
-    for (int key = 100; key < 200; key++) {
+    for (size_t key = 100; key < 200; key++) {
         cache.Put(key, key);
     }
 
@@ -106,7 +106,7 @@ TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
     cache.Get(1);
     cache.Get(1);
 
-    for (int key = 100; key < 110; key++) {
+    for (size_t key = 100; key < 110; key++) {
         cache.Put(key, key);
     }
 
