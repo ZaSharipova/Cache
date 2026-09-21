@@ -3,6 +3,7 @@
 #include "lirs_cache.hpp"
 #include "lru_cache.hpp"
 #include "opt.hpp"
+#include "arc_cache.hpp"
 
 #include "subsidiary.hpp"
 
@@ -31,7 +32,7 @@ size_t RunAndGetHits(CacheT& cache, const std::vector<int>& trace) {
 
 } // namespace
 
-using CacheTypes = ::testing::Types<LFUCache, TwoQCache, LIRSCache, LRUCache>;
+using CacheTypes = ::testing::Types<LFUCache, TwoQCache, LIRSCache, LRUCache, ARCCache>;
 
 template <typename CacheT>
 class InvariantTest : public ::testing::Test {};

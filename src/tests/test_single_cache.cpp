@@ -3,11 +3,22 @@
 #include "2Qcache.hpp"
 #include "lirs_cache.hpp"
 #include "opt.hpp"
+#include "arc_cache.hpp"
 
 #include <gtest/gtest.h>
 
 #include <cstdlib>
 #include <vector>
+
+namespace {
+template <typename CacheT>
+void Access(CacheT& cache, int key) {
+    if (!cache.Get(key).has_value()) {
+        cache.Put(key, key);
+    }
+}
+
+}  // namespace
 
 TEST(LRUCacheTest, BasicPutGet) {
     LRUCache cache(2);
@@ -260,4 +271,199 @@ TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
 
     EXPECT_FALSE(cache.Get(100).has_value());
     EXPECT_TRUE(cache.Get(1).has_value());
+}
+
+TEST(ARCCache, GetOnEmptyIsMiss) {
+    ARCCache cache(3);
+    EXPECT_FALSE(cache.Get(1).has_value());
+    EXPECT_EQ(cache.GetMisses(), 1u);
+    EXPECT_EQ(cache.GetHits(), 0u);
+}
+
+TEST(ARCCache, PutThenGet) {
+    ARCCache cache(3);
+    cache.Put(1, 10);
+
+    auto result = cache.Get(1);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 10);
+    EXPECT_EQ(cache.GetHits(), 1u);
+}
+
+TEST(ARCCache, PutUpdatesExistingValue) {
+    ARCCache cache(3);
+    cache.Put(1, 10);
+    cache.Put(1, 20);
+
+    EXPECT_EQ(cache.Get(1), 20);
+    EXPECT_EQ(cache.Size(), 1u);
+}
+
+TEST(ARCCache, UpdateInT2KeepsValue) {
+    ARCCache cache(3);
+    cache.Put(1, 10);
+    cache.Get(1);
+    cache.Put(1, 30);
+
+    EXPECT_EQ(cache.Get(1), 30);
+    EXPECT_TRUE(cache.CheckInvariants());
+}
+
+TEST(ARCCache, ZeroCapacityStoresNothing) {
+    ARCCache cache(0);
+    cache.Put(1, 10);
+
+    EXPECT_FALSE(cache.Get(1).has_value());
+    EXPECT_EQ(cache.Size(), 0u);
+    EXPECT_TRUE(cache.CheckInvariants());
+}
+
+TEST(ARCCache, CapacityOneKeepsLastKey) {
+    ARCCache cache(1);
+    cache.Put(1, 10);
+    cache.Put(2, 20);
+
+    EXPECT_FALSE(cache.Get(1).has_value());
+    EXPECT_EQ(cache.Get(2), 20);
+    EXPECT_TRUE(cache.CheckInvariants());
+}
+
+TEST(ARCCache, EvictsOldestFromT1) {
+    ARCCache cache(2);
+    cache.Put(1, 1);
+    cache.Put(2, 2);
+    cache.Put(3, 3);
+
+    EXPECT_FALSE(cache.Get(1).has_value());
+    EXPECT_EQ(cache.Get(2), 2);
+    EXPECT_EQ(cache.Get(3), 3);
+    EXPECT_EQ(cache.GetEvictions(), 1u);
+}
+
+TEST(ARCCache, GhostHitIsMissAndPromotesToT2) {
+    ARCCache cache(2);
+    cache.Put(1, 1);
+    cache.Put(2, 2);
+    cache.Get(1);
+    cache.Put(3, 3);
+    EXPECT_EQ(cache.GetEvictions(), 1u);
+
+    size_t misses_before = cache.GetMisses();
+    EXPECT_FALSE(cache.Get(2).has_value());
+    EXPECT_EQ(cache.GetMisses(), misses_before + 1);
+
+    cache.Put(2, 20);
+    EXPECT_EQ(cache.GetEvictions(), 2u);
+    EXPECT_EQ(cache.Size(), 2u);
+    EXPECT_TRUE(cache.CheckInvariants());
+
+    EXPECT_EQ(cache.Get(2), 20);
+    EXPECT_EQ(cache.Get(3), 3);
+    EXPECT_FALSE(cache.Get(1).has_value());
+}
+
+TEST(ARCCache, ScanDoesNotEvictFrequentKeys) {
+    ARCCache cache(4);
+    cache.Put(1, 1);
+    cache.Put(2, 2);
+    cache.Get(1);
+    cache.Get(2);
+
+    for (size_t key = 10; key < 30; key++) {
+        Access(cache, key);
+    }
+
+    EXPECT_EQ(cache.Get(1), 1);
+    EXPECT_EQ(cache.Get(2), 2);
+    EXPECT_TRUE(cache.CheckInvariants());
+}
+
+TEST(ARCCache, BeatsLruOnScanWithHotKeys) {
+    const size_t capacity = 4;
+    ARCCache arc(capacity);
+    LRUCache lru(capacity);
+
+    for (size_t pass = 0; pass < 2; pass++) {
+        for (int hot : {1, 2}) {
+            Access(arc, hot);
+            Access(lru, hot);
+        }
+    }
+
+    for (size_t round = 0; round < 50; round++) {
+        for (size_t i = 0; i < 6; i++) {
+            Access(arc, 100 + round * 6 + i);
+            Access(lru, 100 + round * 6 + i);
+        }
+
+        for (size_t hot : {1, 2}) {
+            Access(arc, hot);
+            Access(lru, hot);
+        }
+    }
+
+    EXPECT_GT(arc.GetHits(), lru.GetHits());
+}
+
+TEST(ARCCache, StatsAddUpToNumberOfGets) {
+    ARCCache cache(5);
+
+    const size_t gets = 1000;
+    for (size_t i = 0; i < gets; i++) {
+        Access(cache, (i * 7) % 20 + 1);  // это псевдо-перемешанные ключи 1...20
+    }
+    EXPECT_EQ(cache.GetHits() + cache.GetMisses(), static_cast<size_t>(gets));
+}
+
+class ARCInvariants : public ::testing::TestWithParam<size_t> {};
+
+TEST_P(ARCInvariants, HoldOnCyclicTrace) {
+    const size_t capacity = GetParam();
+    const int keys = static_cast<int>(capacity) * 3 + 1;
+    ARCCache cache(capacity);
+
+    for (size_t i = 0; i < 5000; i++) {
+        Access(cache, i % keys + 1);
+        ASSERT_TRUE(cache.CheckInvariants()) << "capacity=" << capacity << ", step=" << i;
+    }
+}
+
+TEST_P(ARCInvariants, HoldOnScrambledTrace) {
+    const size_t capacity = GetParam();
+    const int keys = static_cast<int>(capacity) * 3 + 1;
+    ARCCache cache(capacity);
+
+    for (size_t i = 0; i < 5000; i++) {
+        Access(cache, (i * i) % keys + 1);
+        ASSERT_TRUE(cache.CheckInvariants()) << "capacity=" << capacity << ", step=" << i;
+    }
+}
+
+TEST_P(ARCInvariants, HoldOnHotPlusScanTrace) {
+    const size_t capacity = GetParam();
+    ARCCache cache(capacity);
+
+    int scan_key = 1000;
+    for (size_t i = 0; i < 5000; i++) {
+        bool hot = (i % 3 != 0);
+        Access(cache, hot ? i % 4 + 1 : scan_key++);
+        ASSERT_TRUE(cache.CheckInvariants()) << "capacity=" << capacity << ", step=" << i;
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(Capacities, ARCInvariants,
+                         ::testing::Values(1u, 2u, 3u, 8u, 50u));
+
+TEST(ARCCache, InvariantsHoldOnScanAndHotMix) {
+    ARCCache cache(8);
+    for (size_t round = 0; round < 200; round++) {
+        for (int hot = 1; hot <= 3; hot++) {
+            Access(cache, hot);
+        }
+
+        for (size_t i = 0; i < 20; i++) {
+            Access(cache, 100 + (round * 20 + i) % 500);
+        }
+        ASSERT_TRUE(cache.CheckInvariants()) << "round=" << round;
+    }
 }

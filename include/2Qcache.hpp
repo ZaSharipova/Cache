@@ -7,13 +7,6 @@
 #include <cassert>
 #include <unordered_map>
 
-enum class Location {
-    kAm,
-    kA1in,
-    kA1out,
-    kNone,
-};
-
 class TwoQCache {
 public:
     TwoQCache(size_t capacity) : a1in_limit_(std::max<size_t>(capacity / kA1inDivisor, 1)),
@@ -28,6 +21,13 @@ public:
     size_t GetEvictions() const;
 
 private:
+    enum class Location {
+        kAm,
+        kA1in,
+        kA1out,
+        kNone,
+    };
+
     struct Entry {
         int value;
         Location location;
