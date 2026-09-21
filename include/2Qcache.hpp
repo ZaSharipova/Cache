@@ -1,5 +1,5 @@
-#ifndef TWO_Q_CACHE_H_
-#define TWO_Q_CACHE_H_
+#ifndef TWO_Q_CACHE_HPP_
+#define TWO_Q_CACHE_HPP_
 
 #include <iostream>
 #include <list>
@@ -60,4 +60,4 @@ private:
 };
 
 
-#endif // TWO_Q_CACHE_H_
+#endif // TWO_Q_CACHE_HPP_

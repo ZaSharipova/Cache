@@ -1,5 +1,5 @@
-#ifndef OPT_H_
-#define OPT_H_
+#ifndef OPT_HPP_
+#define OPT_HPP_
 
 #include <iostream>
 #include <vector>
@@ -7,4 +7,4 @@
 
 size_t OPT(const std::vector<int>& trace, size_t cache_size);
 
-#endif // OPT_H_
+#endif // OPT_HPP_

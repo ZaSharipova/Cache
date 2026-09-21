@@ -1,5 +1,5 @@
-#ifndef MULTILEVEL_CACHE_H_
-#define MULTILEVEL_CACHE_H_
+#ifndef MULTILEVEL_CACHE_HPP_
+#define MULTILEVEL_CACHE_HPP_
 
 #include "lru_cache.hpp"
 #include "lfu_cache.hpp"
@@ -63,4 +63,4 @@ private:
     static constexpr size_t miss_value = 100;
 };
 
-#endif // MULTILEVEL_CACHE_H_
+#endif // MULTILEVEL_CACHE_HPP_

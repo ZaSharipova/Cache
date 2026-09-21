@@ -1,5 +1,5 @@
-#ifndef LIRS_CACHE_H_
-#define LIRS_CACHE_H_
+#ifndef LIRS_CACHE_HPP_
+#define LIRS_CACHE_HPP_
 
 #include <iostream>
 #include <list>
@@ -57,4 +57,4 @@ private:
     void EvictFromQueue();
 };
 
-#endif // LIRS_CACHE_H_
+#endif // LIRS_CACHE_HPP_

@@ -1,10 +1,9 @@
-#ifndef LFU_CACHE_H_
-#define LFU_CACHE_H_
+#ifndef LFU_CACHE_HPP_
+#define LFU_CACHE_HPP_
 
 #include <iostream>
 
 class LFUCache {
-
 public:
     LFUCache(size_t capacity) : capacity_(capacity) {}
 
@@ -28,4 +27,4 @@ private:
     size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
-#endif // LFU_CACHE_H_
+#endif // LFU_CACHE_HPP_

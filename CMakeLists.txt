@@ -20,6 +20,7 @@ set(CACHE_SOURCES
     ${SRC_DIR}/2Qcache.cpp
     ${SRC_DIR}/lirs_cache.cpp
     ${SRC_DIR}/opt.cpp
+    ${SRC_DIR}/arc_cache.cpp
 )
 
 add_library(cache_lib ${CACHE_SOURCES})
