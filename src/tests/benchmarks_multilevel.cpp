@@ -38,8 +38,9 @@ int main() {
     const size_t l1_size = 3;
     const size_t l2_size = 15;
     const int length = 10000;
+    const int seed = 42;
 
-    std::vector<int> hot = MakeHot(100, length, 42);
+    std::vector<int> hot = MakeHot(100, length, seed);
 
     std::cout << "L1 = " << l1_size << ", L2 = " << l2_size
               << ", pattern hot, trace length: " << length << "\n\n";

@@ -25,11 +25,11 @@ set(CACHE_SOURCES
 add_library(cache_lib ${CACHE_SOURCES})
 target_include_directories(cache_lib PUBLIC ${INCLUDE_DIR})
 
-add_executable(test_cache
-    ${TEST_DIR}/test.cpp
+add_executable(test_single_cache
+    ${TEST_DIR}/test_single_cache.cpp
 )
-target_link_libraries(test_cache PRIVATE cache_lib GTest::gtest_main)
-gtest_discover_tests(test_cache)
+target_link_libraries(test_single_cache PRIVATE cache_lib GTest::gtest_main)
+gtest_discover_tests(test_single_cache)
 
 add_executable(test_multilevel_cache
     ${TEST_DIR}/test_multilevel_cache.cpp
@@ -37,23 +37,18 @@ add_executable(test_multilevel_cache
 target_link_libraries(test_multilevel_cache PRIVATE cache_lib GTest::gtest_main)
 gtest_discover_tests(test_multilevel_cache)
 
-add_executable(test_lirs
-    ${TEST_DIR}/test_lirs.cpp
-)
-target_link_libraries(test_lirs PRIVATE cache_lib GTest::gtest_main)
-gtest_discover_tests(test_lirs)
 
-add_executable(invariant_tests
-    ${TEST_DIR}/invariant_tests.cpp
+add_executable(test_invariants
+    ${TEST_DIR}/test_invariants.cpp
 )
-target_link_libraries(invariant_tests PRIVATE cache_lib GTest::gtest_main)
-gtest_discover_tests(invariant_tests)
+target_link_libraries(test_invariants PRIVATE cache_lib GTest::gtest_main)
+gtest_discover_tests(test_invariants)
 
-add_executable(benchmarks
+add_executable(benchmarks_patterns
     ${SRC_DIR}/subsidiary.cpp
-    ${TEST_DIR}/benchmarks.cpp
+    ${TEST_DIR}/benchmarks_patterns.cpp
 )
-target_link_libraries(benchmarks PRIVATE cache_lib)
+target_link_libraries(benchmarks_patterns PRIVATE cache_lib)
 
 add_executable(benchmarks_multilevel
     ${SRC_DIR}/subsidiary.cpp
