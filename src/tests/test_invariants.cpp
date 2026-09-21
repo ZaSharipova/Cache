@@ -4,29 +4,19 @@
 #include "lru_cache.hpp"
 #include "opt.hpp"
 
+#include "subsidiary.hpp"
+
 #include <gtest/gtest.h>
 
 #include <cstdlib>
 #include <vector>
 
 namespace {
-const size_t num_traces = 5;
-const size_t trace_length = 1000;
-const int key_range = 20;
-const size_t cache_size = 8;
-const size_t starting_seed = 42;
-
-std::vector<int> MakeRandomTrace(size_t length, int key_range, unsigned seed) {
-    srand(seed);
-    std::vector<int> trace;
-
-    trace.reserve(length);
-    for (size_t i = 0; i < length; i++) {
-        trace.push_back(rand() % key_range + 1);
-    }
-
-    return trace;
-}
+constexpr size_t kNumTraces = 5;
+constexpr size_t kTraceLength = 1000;
+constexpr int kKeyRange = 20;
+constexpr size_t kCacheSize = 8;
+constexpr unsigned kStartingSeed = 42;
 
 template <typename CacheT>
 size_t RunAndGetHits(CacheT& cache, const std::vector<int>& trace) {
@@ -39,7 +29,7 @@ size_t RunAndGetHits(CacheT& cache, const std::vector<int>& trace) {
     return cache.GetHits();
 }
 
-}  // namespace
+} // namespace
 
 using CacheTypes = ::testing::Types<LFUCache, TwoQCache, LIRSCache, LRUCache>;
 
@@ -49,11 +39,11 @@ class InvariantTest : public ::testing::Test {};
 TYPED_TEST_SUITE(InvariantTest, CacheTypes);
 
 TYPED_TEST(InvariantTest, OptIsUpperBound) {
-    for (size_t k = 0; k < num_traces; k++) {
-        std::vector<int> trace = MakeRandomTrace(trace_length, key_range, starting_seed + k);
-        TypeParam cache(cache_size);
+    for (size_t k = 0; k < kNumTraces; k++) {
+        std::vector<int> trace = MakeRandomTrace(kTraceLength, kKeyRange, kStartingSeed + k);
+        TypeParam cache(kCacheSize);
         size_t hits = RunAndGetHits(cache, trace);
 
-        EXPECT_GE(OPT(trace, cache_size), hits) << "failed on trace #" << k;
+        EXPECT_GE(OPT(trace, kCacheSize), hits) << "failed on trace #" << k;
     }
 }
