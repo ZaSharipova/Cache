@@ -78,3 +78,21 @@ std::vector<int> MakeRandomTrace(size_t length, int key_range, unsigned seed) {
 
     return trace;
 }
+
+std::vector<int> MakePhaseShift(int length, unsigned seed) {
+    srand(seed);
+    std::vector<int> trace;
+
+    trace.reserve(length);
+    for (int i = 0; i < length; i++) {
+        bool first_phase = (i < length / 2);
+        int hot_low = first_phase ? 1 : 200;
+        if (rand() % kPercentBase < kHotAccessPercent) {
+            trace.push_back(hot_low + rand() % 10);
+        } else {
+            trace.push_back(rand() % 400 + 1);
+        }
+    }
+
+    return trace;
+}

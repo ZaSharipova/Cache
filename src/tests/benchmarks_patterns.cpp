@@ -3,6 +3,7 @@
 #include "2Qcache.hpp"
 #include "lirs_cache.hpp"
 #include "opt.hpp"
+#include "arc_cache.hpp"
 
 #include "subsidiary.hpp"
 
@@ -29,7 +30,7 @@ double OptRatio(const std::vector<int>& trace, size_t cache_size) {
 }
 
 void RunPattern(const std::string& name, const std::vector<int>& trace, size_t capacity) {
-    double lru = 0.0, lfu = 0.0, twoq = 0.0, lirs = 0.0, opt = 0.0;
+    double lru = 0.0, lfu = 0.0, twoq = 0.0, lirs = 0.0, opt = 0.0, arc = 0.0;
     {
         LRUCache cache(capacity);
         lru = HitRatio(cache, trace);
@@ -47,6 +48,11 @@ void RunPattern(const std::string& name, const std::vector<int>& trace, size_t c
         lirs = HitRatio(cache, trace);
     }
 
+    {
+        ARCCache cache(capacity);
+        arc = HitRatio(cache, trace);
+    }
+
     opt = OptRatio(trace, capacity);
 
     std::cout << std::left << std::setw(10) << name
@@ -55,6 +61,7 @@ void RunPattern(const std::string& name, const std::vector<int>& trace, size_t c
               << std::setw(8) << lfu
               << std::setw(8) << twoq
               << std::setw(8) << lirs
+              << std::setw(8) << arc
               << std::setw(8) << opt
               << "\n";
 }
@@ -69,13 +76,15 @@ int main() {
               << std::setw(8) << "LFU"
               << std::setw(8) << "2Q"
               << std::setw(8) << "LIRS"
+              << std::setw(8) << "ARC"
               << std::setw(8) << "OPT" << "\n";
 
-    std::cout << std::string(50, '-') << "\n";
+    std::cout << std::string(60, '-') << "\n";
 
     RunPattern("scan", MakeScan(20, length), capacity);
     RunPattern("hot", MakeHot(100, length, 42), capacity);
     RunPattern("mixed", MakeMixed(length, 42), capacity);
+    RunPattern("phase", MakePhaseShift(length, 42), capacity);
 
     std::cout << "\n(numbers = hit ratio, proportion of hits; OPT = theoretical maximum)\n";
     return 0;

@@ -38,7 +38,6 @@ add_executable(test_multilevel_cache
 target_link_libraries(test_multilevel_cache PRIVATE cache_lib GTest::gtest_main)
 gtest_discover_tests(test_multilevel_cache)
 
-
 add_executable(test_invariants
     ${SRC_DIR}/subsidiary.cpp
     ${TEST_DIR}/test_invariants.cpp

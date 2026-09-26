@@ -4,6 +4,7 @@
 #include "lirs_cache.hpp"
 #include "multilevel_cache.hpp"
 #include "opt.hpp"
+#include "arc_cache.hpp"
 
 #include "subsidiary.hpp"
 
@@ -40,7 +41,7 @@ int main() {
     const int length = 10000;
     const int seed = 42;
 
-    std::vector<int> hot = MakeHot(100, length, seed);
+    std::vector<int> hot = MakePhaseShift(length, seed);
 
     std::cout << "L1 = " << l1_size << ", L2 = " << l2_size
               << ", pattern hot, trace length: " << length << "\n\n";
@@ -71,6 +72,19 @@ int main() {
     {
         MultiLevelCache<LRUCache, LIRSCache> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "LRU + LIRS");
+    }
+
+    {
+        MultiLevelCache<ARCCache, LFUCache> cache(l1_size, l2_size);
+        RunMultiLevel(cache, hot, "ARC + LFU");
+    }
+    {
+        MultiLevelCache<ARCCache, ARCCache> cache(l1_size, l2_size);
+        RunMultiLevel(cache, hot, "ARC + ARC");
+    }
+    {
+        MultiLevelCache<LRUCache, ARCCache> cache(l1_size, l2_size);
+        RunMultiLevel(cache, hot, "LRU + ARC");
     }
 
     size_t opt_hits = OPT(hot, l1_size + l2_size);
