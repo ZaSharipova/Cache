@@ -273,6 +273,82 @@ TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
     EXPECT_TRUE(cache.Get(1).has_value());
 }
 
+TEST(LIRSCacheTest, ReinsertedGhostIsResidentHit) {
+    LIRSCache cache(2);
+    cache.Put(1, 10);
+    cache.Put(2, 20);
+
+    for (size_t key = 3; key < 9; key++) {
+        cache.Put(key, key * 10);
+    }
+
+    size_t misses_before = cache.GetMisses();
+    size_t hits_before = cache.GetHits();
+
+    cache.Put(1, 111);
+
+    EXPECT_EQ(cache.Get(1).value_or(-1), 111);
+    EXPECT_EQ(cache.GetHits(), hits_before + 1);
+    EXPECT_EQ(cache.GetMisses(), misses_before);
+}
+
+TEST(LIRSCacheTest, HitsPlusMissesEqualsNumberOfGets) {
+    LIRSCache cache(3);
+    size_t gets = 0;
+
+    for (size_t i = 0; i < 50; i++) {
+        cache.Put(i % 5, i);
+        cache.Get(i % 7);
+        gets++;
+        cache.Get(i % 3);
+        gets++;
+    }
+
+    EXPECT_EQ(cache.GetHits() + cache.GetMisses(), gets);
+}
+
+TEST(LIRSCacheTest, ManyEvictionsRemainConsistent) {
+    LIRSCache cache(3);
+    cache.Put(1, 10);
+    cache.Get(1);
+    cache.Get(1);
+
+    size_t last = 0;
+
+    for (size_t key = 100; key < 600; key++) {
+        cache.Put(key, key);
+        if (key % 3 == 0) {
+            cache.Get(key);
+        }
+        cache.Put(1, key);
+        last = key;
+    }
+
+    EXPECT_TRUE(cache.Get(1).has_value());
+    EXPECT_EQ(cache.Get(1).value_or(-1), last);
+    EXPECT_GT(cache.GetEvictions(), 0U);
+}
+
+TEST(LIRSCacheTest, GhostReentrySurvivesLaterScan) {
+    LIRSCache cache(4);
+    cache.Put(1, 10);
+    cache.Get(1);
+    cache.Get(1);
+
+    for (size_t key = 100; key < 130; key++) {
+        cache.Put(key, key);
+    }
+
+    cache.Put(1, 700);
+
+    for (size_t key = 200; key < 230; key++) {
+        cache.Put(key, key);
+    }
+
+    EXPECT_TRUE(cache.Get(1).has_value());
+    EXPECT_EQ(cache.Get(1).value_or(-1), 700);
+}
+
 TEST(ARCCache, GetOnEmptyIsMiss) {
     ARCCache cache(3);
     EXPECT_FALSE(cache.Get(1).has_value());

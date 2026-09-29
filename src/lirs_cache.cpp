@@ -156,17 +156,18 @@ void LIRSCache::PromoteGhostToLIR(int key, int value) {
     resident_count_++;
     RemoveFromQueue(entry);
 
-    entry.is_lir = true;
     if (entry.in_stack) {
+        entry.is_lir = true;
         MoveToStackTop(key);
+        lir_count_++;
+        DemoteLIRFromBottom();
     } else {
         stack_s_.push_front(key);
         entry.s_it = stack_s_.begin();
         entry.in_stack = true;
+        AddToQueue(key, entry);
+        entry.is_lir = false;
     }
-
-    lir_count_++;
-    DemoteLIRFromBottom();
 }
 
 void LIRSCache::InsertNewHIR(int key, int value) {
@@ -204,4 +205,8 @@ void LIRSCache::EvictFromQueue() {
     victim_entry.in_queue = false;
     resident_count_--;
     evictions_++;
+
+    if (!victim_entry.in_stack) {
+        table_.erase(victim);
+    }
 }

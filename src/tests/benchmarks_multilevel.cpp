@@ -41,7 +41,7 @@ int main() {
     const int length = 10000;
     const int seed = 42;
 
-    std::vector<int> hot = MakePhaseShift(length, seed);
+    std::vector<int> hot = MakeHot(100, length, seed);
 
     std::cout << "L1 = " << l1_size << ", L2 = " << l2_size
               << ", pattern hot, trace length: " << length << "\n\n";
