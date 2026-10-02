@@ -14,9 +14,9 @@
 #include <vector>
 #include <cstdlib>
 
-template <typename CacheT>
-void RunMultiLevel(CacheT& cache, const std::vector<int>& trace, const std::string& name) {
-    for (int key : trace) {
+template <typename CacheT, typename K>
+void RunMultiLevel(CacheT& cache, const std::vector<K>& trace, const std::string& name) {
+    for (K key : trace) {
         if (!cache.Get(key).has_value()) {
             cache.Put(key, key);
         }
@@ -54,40 +54,39 @@ int main() {
     std::cout << std::string(58, '-') << "\n";
 
     {
-        MultiLevelCache<LRUCache, LRUCache> cache(l1_size, l2_size);
+        MultiLevelCache<LRUCache<int, int>, LRUCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "LRU + LRU");
     }
     {
-        MultiLevelCache<LRUCache, LFUCache> cache(l1_size, l2_size);
+        MultiLevelCache<LRUCache<int, int>, LFUCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "LRU + LFU");
     }
     {
-        MultiLevelCache<TwoQCache, LFUCache> cache(l1_size, l2_size);
+        MultiLevelCache<TwoQCache<int, int>, LFUCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "2Q + LFU");
     }
     {
-        MultiLevelCache<LFUCache, LFUCache> cache(l1_size, l2_size);
+        MultiLevelCache<LFUCache<int, int>, LFUCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "LFU + LFU");
     }
     {
-        MultiLevelCache<LRUCache, LIRSCache> cache(l1_size, l2_size);
+        MultiLevelCache<LRUCache<int, int>, LIRSCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "LRU + LIRS");
     }
-
     {
-        MultiLevelCache<ARCCache, LFUCache> cache(l1_size, l2_size);
+        MultiLevelCache<ARCCache<int, int>, LFUCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "ARC + LFU");
     }
     {
-        MultiLevelCache<ARCCache, ARCCache> cache(l1_size, l2_size);
+        MultiLevelCache<ARCCache<int, int>, ARCCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "ARC + ARC");
     }
     {
-        MultiLevelCache<LRUCache, ARCCache> cache(l1_size, l2_size);
+        MultiLevelCache<LRUCache<int, int>, ARCCache<int, int>> cache(l1_size, l2_size);
         RunMultiLevel(cache, hot, "LRU + ARC");
     }
 
-    size_t opt_hits = OPT(hot, l1_size + l2_size);
+    size_t opt_hits = OPT<int, int>(hot, l1_size + l2_size);
     double opt_ratio = static_cast<double>(opt_hits) / hot.size();
     std::cout << "\nOPT (size L1 + L2 = " << (l1_size + l2_size) << "): "
               << "hits = " << opt_hits << ", hr = "

@@ -21,25 +21,25 @@ void Access(CacheT& cache, int key) {
 }  // namespace
 
 TEST(LRUCacheTest, BasicPutGet) {
-    LRUCache cache(2);
+    LRUCache<int, int> cache(2);
     cache.Put(1, 10);
     EXPECT_EQ(cache.Get(1).value_or(-1), 10);
 }
 
 TEST(LRUCacheTest, GetMissingReturnsNullopt) {
-    LRUCache cache(2);
+    LRUCache<int, int> cache(2);
     EXPECT_FALSE(cache.Get(99).has_value());
 }
 
 TEST(LRUCacheTest, UpdatesExistingValue) {
-    LRUCache cache(2);
+    LRUCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(1, 20);
     EXPECT_EQ(cache.Get(1).value_or(-1), 20);
 }
 
 TEST(LRUCacheTest, EvictsLeastRecentlyUsed) {
-    LRUCache cache(2);
+    LRUCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(2, 20);
     cache.Put(3, 30);
@@ -49,7 +49,7 @@ TEST(LRUCacheTest, EvictsLeastRecentlyUsed) {
 }
 
 TEST(LRUCacheTest, GetRefreshesRecency) {
-    LRUCache cache(2);
+    LRUCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(2, 20);
     cache.Get(1);
@@ -59,7 +59,7 @@ TEST(LRUCacheTest, GetRefreshesRecency) {
 }
 
 TEST(LRUCacheTest, CapacityOne) {
-    LRUCache cache(1);
+    LRUCache<int, int> cache(1);
     cache.Put(1, 10);
     cache.Put(2, 20);
     EXPECT_FALSE(cache.Get(1).has_value());
@@ -67,25 +67,25 @@ TEST(LRUCacheTest, CapacityOne) {
 }
 
 TEST(LFUCacheTest, BasicPutGet) {
-    LFUCache cache(2);
+    LFUCache<int, int> cache(2);
     cache.Put(1, 10);
     EXPECT_EQ(cache.Get(1).value_or(-1), 10);
 }
 
 TEST(LFUCacheTest, GetMissingReturnsNullopt) {
-    LFUCache cache(2);
+    LFUCache<int, int> cache(2);
     EXPECT_FALSE(cache.Get(99).has_value());
 }
 
 TEST(LFUCacheTest, UpdatesExistingValue) {
-    LFUCache cache(2);
+    LFUCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(1, 20);
     EXPECT_EQ(cache.Get(1).value_or(-1), 20);
 }
 
 TEST(LFUCacheTest, EvictsLeastFrequentlyUsed) {
-    LFUCache cache(2);
+    LFUCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(2, 20);
     cache.Get(1);
@@ -96,7 +96,7 @@ TEST(LFUCacheTest, EvictsLeastFrequentlyUsed) {
 }
 
 TEST(LFUCacheTest, CapacityOne) {
-    LFUCache cache(1);
+    LFUCache<int, int> cache(1);
     cache.Put(1, 10);
     cache.Put(2, 20);
     EXPECT_FALSE(cache.Get(1).has_value());
@@ -104,13 +104,13 @@ TEST(LFUCacheTest, CapacityOne) {
 }
 
 TEST(TwoQCacheTest, BasicPutGet) {
-    TwoQCache cache(8);
+    TwoQCache<int, int> cache(8);
     cache.Put(1, 10);
     EXPECT_EQ(cache.Get(1).value_or(-1), 10);
 }
 
 TEST(TwoQCacheTest, SmallCapacity) {
-    TwoQCache cache(3);
+    TwoQCache<int, int> cache(3);
 
     for (int k = 1; k <= 20; k++) {
         if (!cache.Get(k).has_value()) {
@@ -123,19 +123,19 @@ TEST(TwoQCacheTest, SmallCapacity) {
 }
 
 TEST(TwoQCacheTest, GetMissingReturnsNullopt) {
-    TwoQCache cache(8);
+    TwoQCache<int, int> cache(8);
     EXPECT_FALSE(cache.Get(99).has_value());
 }
 
 TEST(TwoQCacheTest, UpdatesExistingValue) {
-    TwoQCache cache(8);
+    TwoQCache<int, int> cache(8);
     cache.Put(1, 10);
     cache.Put(1, 20);
     EXPECT_EQ(cache.Get(1).value_or(-1), 20);
 }
 
 TEST(TwoQCacheTest, EvictsFromInputQueue) {
-    TwoQCache cache(8);
+    TwoQCache<int, int> cache(8);
     cache.Put(1, 10);
     cache.Put(2, 20);
     cache.Put(3, 30);
@@ -143,7 +143,7 @@ TEST(TwoQCacheTest, EvictsFromInputQueue) {
 }
 
 TEST(TwoQCacheTest, ReinsertAfterEviction) {
-    TwoQCache cache(8);
+    TwoQCache<int, int> cache(8);
     cache.Put(1, 10);
     cache.Put(2, 20);
     cache.Put(3, 30);
@@ -154,34 +154,34 @@ TEST(TwoQCacheTest, ReinsertAfterEviction) {
 
 TEST(OptTest, CyclicTrace) {
     std::vector<int> trace = {1, 2, 3, 1, 2, 3, 1, 2, 3};
-    EXPECT_EQ(OPT(trace, 2), 3);
+    EXPECT_EQ((OPT<int, int>(trace, 2)), 3);
 }
 
 TEST(OptTest, RepeatedKey) {
     std::vector<int> trace = {1, 1, 1, 1};
-    EXPECT_EQ(OPT(trace, 2), 3);
+    EXPECT_EQ((OPT<int, int>(trace, 2)), 3);
 }
 
 TEST(LIRSCacheTest, BasicPutGet) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     cache.Put(1, 10);
     EXPECT_EQ(cache.Get(1).value_or(-1), 10);
 }
 
 TEST(LIRSCacheTest, GetMissingReturnsNullopt) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     EXPECT_FALSE(cache.Get(99).has_value());
 }
 
 TEST(LIRSCacheTest, UpdatesExistingValue) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     cache.Put(1, 10);
     cache.Put(1, 20);
     EXPECT_EQ(cache.Get(1).value_or(-1), 20);
 }
 
 TEST(LIRSCacheTest, CapacityOne) {
-    LIRSCache cache(1);
+    LIRSCache<int, int> cache(1);
     cache.Put(1, 10);
     cache.Put(2, 20);
     EXPECT_FALSE(cache.Get(1).has_value());
@@ -189,7 +189,7 @@ TEST(LIRSCacheTest, CapacityOne) {
 }
 
 TEST(LIRSCacheTest, MissingKeyIncrementsMisses) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     EXPECT_EQ(cache.GetMisses(), 0U);
     cache.Get(42);
     EXPECT_EQ(cache.GetMisses(), 1U);
@@ -198,7 +198,7 @@ TEST(LIRSCacheTest, MissingKeyIncrementsMisses) {
 }
 
 TEST(LIRSCacheTest, HitIncrementsHits) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     cache.Put(1, 10);
     EXPECT_EQ(cache.GetHits(), 0U);
     cache.Get(1);
@@ -208,7 +208,7 @@ TEST(LIRSCacheTest, HitIncrementsHits) {
 }
 
 TEST(LIRSCacheTest, HitsAndMissesAreIndependentCounters) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     cache.Put(1, 10);
     cache.Get(1); // hit
     cache.Get(2); // miss
@@ -218,7 +218,7 @@ TEST(LIRSCacheTest, HitsAndMissesAreIndependentCounters) {
 }
 
 TEST(LIRSCacheTest, EvictionsHappenWhenOverCapacity) {
-    LIRSCache cache(2);
+    LIRSCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(2, 20);
     EXPECT_EQ(cache.GetEvictions(), 0U);
@@ -231,7 +231,7 @@ TEST(LIRSCacheTest, EvictionsHappenWhenOverCapacity) {
 }
 
 TEST(LIRSCacheTest, ReinsertAfterEviction) {
-    LIRSCache cache(2);
+    LIRSCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(2, 20);
     cache.Put(3, 30);
@@ -243,7 +243,7 @@ TEST(LIRSCacheTest, ReinsertAfterEviction) {
 }
 
 TEST(LIRSCacheTest, FrequentlyAccessedKeySurvivesScan) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
 
     cache.Put(1, 10);
     cache.Get(1);
@@ -259,7 +259,7 @@ TEST(LIRSCacheTest, FrequentlyAccessedKeySurvivesScan) {
 }
 
 TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
 
     cache.Put(1, 10);
     cache.Get(1);
@@ -274,7 +274,7 @@ TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
 }
 
 TEST(LIRSCacheTest, ReinsertedGhostIsResidentHit) {
-    LIRSCache cache(2);
+    LIRSCache<int, int> cache(2);
     cache.Put(1, 10);
     cache.Put(2, 20);
 
@@ -293,7 +293,7 @@ TEST(LIRSCacheTest, ReinsertedGhostIsResidentHit) {
 }
 
 TEST(LIRSCacheTest, HitsPlusMissesEqualsNumberOfGets) {
-    LIRSCache cache(3);
+    LIRSCache<int, int> cache(3);
     size_t gets = 0;
 
     for (size_t i = 0; i < 50; i++) {
@@ -308,7 +308,7 @@ TEST(LIRSCacheTest, HitsPlusMissesEqualsNumberOfGets) {
 }
 
 TEST(LIRSCacheTest, ManyEvictionsRemainConsistent) {
-    LIRSCache cache(3);
+    LIRSCache<int, int> cache(3);
     cache.Put(1, 10);
     cache.Get(1);
     cache.Get(1);
@@ -330,7 +330,7 @@ TEST(LIRSCacheTest, ManyEvictionsRemainConsistent) {
 }
 
 TEST(LIRSCacheTest, GhostReentrySurvivesLaterScan) {
-    LIRSCache cache(4);
+    LIRSCache<int, int> cache(4);
     cache.Put(1, 10);
     cache.Get(1);
     cache.Get(1);
@@ -350,14 +350,14 @@ TEST(LIRSCacheTest, GhostReentrySurvivesLaterScan) {
 }
 
 TEST(ARCCache, GetOnEmptyIsMiss) {
-    ARCCache cache(3);
+    ARCCache<int, int> cache(3);
     EXPECT_FALSE(cache.Get(1).has_value());
     EXPECT_EQ(cache.GetMisses(), 1u);
     EXPECT_EQ(cache.GetHits(), 0u);
 }
 
 TEST(ARCCache, PutThenGet) {
-    ARCCache cache(3);
+    ARCCache<int, int> cache(3);
     cache.Put(1, 10);
 
     auto result = cache.Get(1);
@@ -367,7 +367,7 @@ TEST(ARCCache, PutThenGet) {
 }
 
 TEST(ARCCache, PutUpdatesExistingValue) {
-    ARCCache cache(3);
+    ARCCache<int, int> cache(3);
     cache.Put(1, 10);
     cache.Put(1, 20);
 
@@ -376,7 +376,7 @@ TEST(ARCCache, PutUpdatesExistingValue) {
 }
 
 TEST(ARCCache, UpdateInT2KeepsValue) {
-    ARCCache cache(3);
+    ARCCache<int, int> cache(3);
     cache.Put(1, 10);
     cache.Get(1);
     cache.Put(1, 30);
@@ -386,7 +386,7 @@ TEST(ARCCache, UpdateInT2KeepsValue) {
 }
 
 TEST(ARCCache, ZeroCapacityStoresNothing) {
-    ARCCache cache(0);
+    ARCCache<int, int> cache(0);
     cache.Put(1, 10);
 
     EXPECT_FALSE(cache.Get(1).has_value());
@@ -395,7 +395,7 @@ TEST(ARCCache, ZeroCapacityStoresNothing) {
 }
 
 TEST(ARCCache, CapacityOneKeepsLastKey) {
-    ARCCache cache(1);
+    ARCCache<int, int> cache(1);
     cache.Put(1, 10);
     cache.Put(2, 20);
 
@@ -405,7 +405,7 @@ TEST(ARCCache, CapacityOneKeepsLastKey) {
 }
 
 TEST(ARCCache, EvictsOldestFromT1) {
-    ARCCache cache(2);
+    ARCCache<int, int> cache(2);
     cache.Put(1, 1);
     cache.Put(2, 2);
     cache.Put(3, 3);
@@ -417,7 +417,7 @@ TEST(ARCCache, EvictsOldestFromT1) {
 }
 
 TEST(ARCCache, GhostHitIsMissAndPromotesToT2) {
-    ARCCache cache(2);
+    ARCCache<int, int> cache(2);
     cache.Put(1, 1);
     cache.Put(2, 2);
     cache.Get(1);
@@ -439,7 +439,7 @@ TEST(ARCCache, GhostHitIsMissAndPromotesToT2) {
 }
 
 TEST(ARCCache, ScanDoesNotEvictFrequentKeys) {
-    ARCCache cache(4);
+    ARCCache<int, int> cache(4);
     cache.Put(1, 1);
     cache.Put(2, 2);
     cache.Get(1);
@@ -456,8 +456,8 @@ TEST(ARCCache, ScanDoesNotEvictFrequentKeys) {
 
 TEST(ARCCache, BeatsLruOnScanWithHotKeys) {
     const size_t capacity = 4;
-    ARCCache arc(capacity);
-    LRUCache lru(capacity);
+    ARCCache<int, int> arc(capacity);
+    LRUCache<int, int> lru(capacity);
 
     for (size_t pass = 0; pass < 2; pass++) {
         for (int hot : {1, 2}) {
@@ -482,7 +482,7 @@ TEST(ARCCache, BeatsLruOnScanWithHotKeys) {
 }
 
 TEST(ARCCache, StatsAddUpToNumberOfGets) {
-    ARCCache cache(5);
+    ARCCache<int, int> cache(5);
 
     const size_t gets = 1000;
     for (size_t i = 0; i < gets; i++) {
@@ -496,7 +496,7 @@ class ARCInvariants : public ::testing::TestWithParam<size_t> {};
 TEST_P(ARCInvariants, HoldOnCyclicTrace) {
     const size_t capacity = GetParam();
     const int keys = static_cast<int>(capacity) * 3 + 1;
-    ARCCache cache(capacity);
+    ARCCache<int, int> cache(capacity);
 
     for (size_t i = 0; i < 5000; i++) {
         Access(cache, i % keys + 1);
@@ -507,7 +507,7 @@ TEST_P(ARCInvariants, HoldOnCyclicTrace) {
 TEST_P(ARCInvariants, HoldOnScrambledTrace) {
     const size_t capacity = GetParam();
     const int keys = static_cast<int>(capacity) * 3 + 1;
-    ARCCache cache(capacity);
+    ARCCache<int, int> cache(capacity);
 
     for (size_t i = 0; i < 5000; i++) {
         Access(cache, (i * i) % keys + 1);
@@ -517,7 +517,7 @@ TEST_P(ARCInvariants, HoldOnScrambledTrace) {
 
 TEST_P(ARCInvariants, HoldOnHotPlusScanTrace) {
     const size_t capacity = GetParam();
-    ARCCache cache(capacity);
+    ARCCache<int, int> cache(capacity);
 
     int scan_key = 1000;
     for (size_t i = 0; i < 5000; i++) {
@@ -531,7 +531,7 @@ INSTANTIATE_TEST_SUITE_P(Capacities, ARCInvariants,
                          ::testing::Values(1u, 2u, 3u, 8u, 50u));
 
 TEST(ARCCache, InvariantsHoldOnScanAndHotMix) {
-    ARCCache cache(8);
+    ARCCache<int, int> cache(8);
     for (size_t round = 0; round < 200; round++) {
         for (int hot = 1; hot <= 3; hot++) {
             Access(cache, hot);

@@ -12,16 +12,22 @@
 template <typename c1, typename c2>
 class MultiLevelCache {
 public:
+    static_assert(std::is_same<typename c1::key_type, typename c2::key_type>::value, "c1 and c2 key_values are not the same");
+    static_assert(std::is_same<typename c1::value_type, typename c2::value_type>::value, "c1 and c2 key_values are not the same");
+
+    using K = typename c1::key_type;
+    using V = typename c1::value_type;
+
     MultiLevelCache(size_t l1_size, size_t l2_size) : cache_l1_(l1_size), cache_l2_(l2_size) {}
 
-    std::optional<int> Get(int key) {
-        std::optional<int> ans_l1 = cache_l1_.Get(key);
+    std::optional<V> Get(K key) {
+        std::optional<V> ans_l1 = cache_l1_.Get(key);
         if (ans_l1.has_value()) {
             hits_l1_++;
             return ans_l1;
         }
 
-        std::optional<int> ans_l2 = cache_l2_.Get(key);
+        std::optional<V> ans_l2 = cache_l2_.Get(key);
         if (ans_l2.has_value()) {
             hits_l2_++;
             cache_l1_.Put(key, ans_l2.value());
@@ -32,7 +38,7 @@ public:
         return std::nullopt;
     }
 
-    void Put(int key, int value) {
+    void Put(K key, V value) {
         cache_l1_.Put(key, value);
         cache_l2_.Put(key, value); // дублирую, потому что использую inclusive способ решения проблемы удаления данных при вытеснении из L1
     }

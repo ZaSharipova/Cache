@@ -13,9 +13,9 @@
 #include <string>
 #include <cstdlib>
 
-template <typename CacheT>
-double HitRatio(CacheT& cache, const std::vector<int>& trace) {
-    for (int key : trace) {
+template <typename CacheT, typename K>
+double HitRatio(CacheT& cache, const std::vector<K>& trace) {
+    for (K key : trace) {
         if (!cache.Get(key).has_value()) {
             cache.Put(key, key);
         }
@@ -25,35 +25,36 @@ double HitRatio(CacheT& cache, const std::vector<int>& trace) {
     return total > 0 ? cache.GetHits() / total : 0.0;
 }
 
-double OptRatio(const std::vector<int>& trace, size_t cache_size) {
-    return (double)OPT(trace, cache_size) / trace.size();
+template <typename K, typename V>
+double OptRatio(const std::vector<K>& trace, size_t cache_size) {
+    return (double)OPT<K, V>(trace, cache_size) / trace.size();
 }
 
-void RunPattern(const std::string& name, const std::vector<int>& trace, size_t capacity) {
+template <typename K, typename V>
+void RunPattern(const std::string& name, const std::vector<K>& trace, size_t capacity) {
     double lru = 0.0, lfu = 0.0, twoq = 0.0, lirs = 0.0, opt = 0.0, arc = 0.0;
     {
-        LRUCache cache(capacity);
+        LRUCache<K, V> cache(capacity);
         lru = HitRatio(cache, trace);
     }
     {
-        LFUCache cache(capacity);
+        LFUCache<K, V> cache(capacity);
         lfu = HitRatio(cache, trace);
     }
     {
-        TwoQCache cache(capacity);
+        TwoQCache<K, V> cache(capacity);
         twoq = HitRatio(cache, trace);
     }
     {
-        LIRSCache cache(capacity);
+        LIRSCache<K, V> cache(capacity);
         lirs = HitRatio(cache, trace);
     }
-
     {
-        ARCCache cache(capacity);
+        ARCCache<K, V> cache(capacity);
         arc = HitRatio(cache, trace);
     }
 
-    opt = OptRatio(trace, capacity);
+    opt = OptRatio<K, V>(trace, capacity);
 
     std::cout << std::left << std::setw(10) << name
               << std::right << std::fixed << std::setprecision(3)
@@ -81,10 +82,10 @@ int main() {
 
     std::cout << std::string(60, '-') << "\n";
 
-    RunPattern("scan", MakeScan(20, length), capacity);
-    RunPattern("hot", MakeHot(100, length, 42), capacity);
-    RunPattern("mixed", MakeMixed(length, 42), capacity);
-    RunPattern("phase", MakePhaseShift(length, 42), capacity);
+    RunPattern<int, int>("scan", MakeScan(20, length), capacity);
+    RunPattern<int, int>("hot", MakeHot(100, length, 42), capacity);
+    RunPattern<int, int>("mixed", MakeMixed(length, 42), capacity);
+    RunPattern<int, int>("phase", MakePhaseShift(length, 42), capacity);
 
     std::cout << "\n(numbers = hit ratio, proportion of hits; OPT = theoretical maximum)\n";
     return 0;

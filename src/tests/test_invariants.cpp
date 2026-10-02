@@ -19,9 +19,9 @@ constexpr int kKeyRange = 20;
 constexpr size_t kCacheSize = 8;
 constexpr unsigned kStartingSeed = 42;
 
-template <typename CacheT>
-size_t RunAndGetHits(CacheT& cache, const std::vector<int>& trace) {
-    for (int key : trace) {
+template <typename CacheT, typename K>
+size_t RunAndGetHits(CacheT& cache, const std::vector<K>& trace) {
+    for (K key : trace) {
         if (!cache.Get(key).has_value()) {
             cache.Put(key, key);
         }
@@ -32,7 +32,7 @@ size_t RunAndGetHits(CacheT& cache, const std::vector<int>& trace) {
 
 } // namespace
 
-using CacheTypes = ::testing::Types<LFUCache, TwoQCache, LIRSCache, LRUCache, ARCCache>;
+using CacheTypes = ::testing::Types<LFUCache<int, int>, TwoQCache<int, int>, LIRSCache<int, int>, LRUCache<int, int>, ARCCache<int, int>>;
 
 template <typename CacheT>
 class InvariantTest : public ::testing::Test {};
@@ -45,6 +45,6 @@ TYPED_TEST(InvariantTest, OptIsUpperBound) {
         TypeParam cache(kCacheSize);
         size_t hits = RunAndGetHits(cache, trace);
 
-        EXPECT_GE(OPT(trace, kCacheSize), hits) << "failed on trace #" << k;
+        EXPECT_GE((OPT<int, int>(trace, kCacheSize)), hits) << "failed on trace #" << k;
     }
 }
