@@ -4,6 +4,7 @@
 #include <iostream>
 #include <list>
 #include <optional>
+#include <unordered_map>
 
 template<typename K, typename V>
 class LRUCache {

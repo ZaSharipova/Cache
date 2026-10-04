@@ -5,6 +5,7 @@
 #include <iostream>
 #include <list>
 #include <unordered_map>
+#include <optional>
 
 template <typename K, typename V>
 class ARCCache {

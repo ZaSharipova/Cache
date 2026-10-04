@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-test-bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GoogleTest
+        run: sudo apt-get update && sudo apt-get install -y libgtest-dev
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build all targets
+        run: cmake --build build --parallel
+      - name: Run tests (ctest)
+        working-directory: build
+        run: ctest --output-on-failure
+      - name: Run benchmarks (patterns)
+        run: ./build/benchmarks_patterns > patterns.stdout.txt 2> patterns.stderr.txt
+      - name: Run benchmarks (multilevel)
+        run: ./build/benchmarks_multilevel > multilevel.stdout.txt 2> multilevel.stderr.txt
+
+      - name: Upload benchmark output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-output
+          path: |
+            patterns.stdout.txt
+            patterns.stderr.txt
+            multilevel.stdout.txt
+            multilevel.stderr.txt
+          retention-days: 5
+          if-no-files-found: error

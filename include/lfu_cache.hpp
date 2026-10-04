@@ -2,6 +2,9 @@
 #define LFU_CACHE_HPP_
 
 #include <iostream>
+#include <unordered_map>
+#include <cstdint>
+#include <optional>
 
 template <typename K, typename V>
 class LFUCache {
