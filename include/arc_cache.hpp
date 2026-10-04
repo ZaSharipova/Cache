@@ -93,8 +93,6 @@ public:
     }
 
 private:
-    size_t capacity_;
-    size_t t1_target_size_ = 0;
 
     struct Entry {
         K key;
@@ -113,12 +111,6 @@ private:
         typename std::list<Entry>::iterator data_it;
         typename std::list<K>::iterator ghost_it;
     };
-
-    std::list<Entry> t1_, t2_;
-    std::list<K> b1_, b2_;
-    std::unordered_map<K, Node> table_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 
     void MoveToT2Front(Node& node) {
         if (node.location == Location::kT1) {
@@ -203,6 +195,15 @@ private:
         table_.erase(ghost.back());
         ghost.pop_back();
     }
+
+    size_t capacity_;
+    size_t t1_target_size_ = 0;
+
+    std::list<Entry> t1_, t2_;
+    std::list<K> b1_, b2_;
+    std::unordered_map<K, Node> table_;
+
+    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // ARC_CACHE_HPP_

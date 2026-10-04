@@ -258,19 +258,32 @@ TEST(LIRSCacheTest, FrequentlyAccessedKeySurvivesScan) {
     EXPECT_EQ(cache.Get(1).value(), 10);
 }
 
-TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKey) {
+TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKeys) {
     LIRSCache<int, int> cache(4);
+    const int hot_keys[] = {1, 2, 3};
 
-    cache.Put(1, 10);
-    cache.Get(1);
-    cache.Get(1);
+    for (int k : hot_keys) {
+        cache.Put(k, k * 10);
+    }
 
-    for (size_t key = 100; key < 110; key++) {
+    for (int k : hot_keys) {
+        cache.Get(k);
+        cache.Get(k);
+    }
+
+    for (int key = 100; key < 110; key++) {
         cache.Put(key, key);
     }
 
-    EXPECT_FALSE(cache.Get(100).has_value());
-    EXPECT_TRUE(cache.Get(1).has_value());
+    for (int k : hot_keys) {
+        EXPECT_TRUE(cache.Get(k).has_value()) << "hot key " << k << " evicted";
+    }
+
+    for (int key = 100; key < 109; key++) {
+        EXPECT_FALSE(cache.Get(key).has_value()) << "scan key " << key << " survived";
+    }
+
+    EXPECT_TRUE(cache.Get(109).has_value()) << "scan key " << 109 << " should have survived";
 }
 
 TEST(LIRSCacheTest, ReinsertedGhostIsResidentHit) {

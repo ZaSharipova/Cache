@@ -63,6 +63,11 @@ public:
             return;
         }
 
+        if (lir_count_ < lir_limit_) {
+            InsertNewLIR(key, value);
+            return;
+        }
+
         InsertNewHIR(key, value);
     }
 
@@ -79,14 +84,8 @@ public:
     }
 
 private:
-    const size_t capacity_;
-    const size_t hir_limit_;
-    const size_t lir_limit_;
-    size_t lir_count_ = 0;
-    size_t resident_count_ = 0;
 
-    std::list<K> stack_s_;
-    std::list<K> queue_q_;
+    static constexpr size_t kHirDivisor = 100;
 
     struct Entry {
         V value;
@@ -97,12 +96,6 @@ private:
         typename std::list<K>::iterator q_it;
         bool in_queue;
     };
-
-    std::unordered_map<K, Entry> table_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
-
-    static constexpr size_t kHirDivisor = 100;
 
     void Prune() {
         while (!stack_s_.empty()) {
@@ -232,6 +225,21 @@ private:
         resident_count_++;
     }
 
+    void InsertNewLIR(K key, V value) {
+        Entry entry;
+        entry.value = value;
+        entry.is_lir = true;
+        entry.is_resident = true;
+
+        stack_s_.push_front(key);
+        entry.s_it = stack_s_.begin();
+        entry.in_stack = true;
+
+        table_[key] = entry;
+        resident_count_++;
+        lir_count_++;
+    }
+
     void EvictFromQueue() {
         if (queue_q_.empty()) {
             return;
@@ -250,6 +258,19 @@ private:
             table_.erase(victim);
         }
     }
+
+    const size_t capacity_;
+    const size_t hir_limit_;
+    const size_t lir_limit_;
+    size_t lir_count_ = 0;
+    size_t resident_count_ = 0;
+
+    std::list<K> stack_s_;
+    std::list<K> queue_q_;
+
+    std::unordered_map<K, Entry> table_;
+
+    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // LIRS_CACHE_HPP_
