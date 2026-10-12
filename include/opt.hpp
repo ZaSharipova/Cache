@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <unordered_set>
+#include <algorithm>
 
 template <typename K, typename V>
 size_t OPT(const std::vector<K>& trace, size_t cache_size) {
@@ -24,13 +25,7 @@ size_t OPT(const std::vector<K>& trace, size_t cache_size) {
             K key_to_erase = 0;
             size_t farthest_key_pos = 0;
             for (auto key_set : cache) {
-                size_t next_pos = trace.size();
-                for (size_t j = i + 1; j < trace.size(); j++) {
-                    if (trace[j] == key_set) {
-                        next_pos = j;
-                        break;
-                    }
-                }
+                size_t next_pos = std::find(trace.begin() + i + 1, trace.end(), key_set) - trace.begin();
 
                 if (next_pos > farthest_key_pos) {
                     farthest_key_pos = next_pos;

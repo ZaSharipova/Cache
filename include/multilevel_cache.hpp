@@ -59,6 +59,10 @@ public:
         return misses_;
     }
 
+    size_t GetHits(size_t level) const {
+        return level == 0 ? hits_l1_ : hits_l2_;
+    }
+
 private:
     c1 cache_l1_;
     c2 cache_l2_;

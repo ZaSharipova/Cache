@@ -19,6 +19,8 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build all targets
         run: cmake --build build --parallel
+      - name: make dirs for data
+        run: mkdir images_new csvs
       - name: Run tests (ctest)
         working-directory: build
         run: ctest --output-on-failure
