@@ -7,6 +7,8 @@
 #include "arc_cache.hpp"
 #include "subsidiary.hpp"
 
+#include "report.hpp"
+
 #include <charconv>
 #include <iostream>
 #include <iomanip>
@@ -19,14 +21,6 @@
 #include <fstream>
 
 namespace {
-
-struct Result {
-    std::string name;
-    size_t h1, h2, misses;
-    double hr;
-    size_t cost;
-    int seed = 0;
-};
 
 using Candidates = std::tuple<
     LRUCache<int, int>,
@@ -41,21 +35,12 @@ constexpr size_t kCandCount = std::tuple_size_v<Candidates>;
 void PrintResult(const Result& result) {
     std::cout << std::left << std::setw(14) << result.name
               << std::right << std::fixed << std::setprecision(3)
-              << std::setw(8) << result.h1
-              << std::setw(8) << result.h2
+              << std::setw(8) << result.hits[0]
+              << std::setw(8) << result.hits[1]
               << std::setw(8) << result.misses
-              << std::setw(8) << result.hr
+              << std::setw(8) << result.hit_ratio
               << std::setw(12) << result.cost
               << "\n";
-}
-
-void WriteCsv(const std::string& path, const std::vector<Result>& results) {
-    std::ofstream out(path);
-    out << "config,h1,h2,miss,hr,cost,seed\n";
-    for (const Result& result : results) {
-        out << result.name << "," << result.h1 << "," << result.h2 << "," << result.misses << ","
-            << result.hr << "," << result.cost << "," << result.seed << "\n";
-    }
 }
 
 template <typename CacheT, typename K>
@@ -71,7 +56,7 @@ Result RunMultiLevel(CacheT& cache, const std::vector<K>& trace, const std::stri
     size_t total = h1 + h2 + cache.GetMisses();
     double hit_ratio = static_cast<double>(h1 + h2) / total;
 
-    return {name, h1, h2, cache.GetMisses(), hit_ratio, cache.GetCost()};
+    return {name, {h1, h2}, cache.GetMisses(), hit_ratio, cache.GetCost(), 0};
 }
 template <size_t I, size_t J>
 void RunPair(const std::vector<int>& trace, size_t l1, size_t l2, std::vector<Result>& results) {
@@ -120,7 +105,7 @@ int main() {
         }
 
         size_t opt_hits = OPT<int, int>(hot, l1_size + l2_size);
-        results.push_back({"OPT", opt_hits, 0, hot.size() - opt_hits,
+        results.push_back({"OPT", {opt_hits}, hot.size() - opt_hits,
                            static_cast<double>(opt_hits) / hot.size(), 0, seed});
     }
 

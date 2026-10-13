@@ -28,6 +28,8 @@ jobs:
         run: ./build/benchmarks_patterns > patterns.stdout.txt 2> patterns.stderr.txt
       - name: Run benchmarks (multilevel)
         run: ./build/benchmarks_multilevel > multilevel.stdout.txt 2> multilevel.stderr.txt
+      - name: Run simulator
+        run: ./build/cache_simulator --multi lru:3,lfu:15,arc:100 --costs 1,10,50,200
 
       - name: Upload benchmark output
         if: always()

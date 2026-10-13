@@ -4,8 +4,9 @@
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <iostream>
 
-#include "CacheFactory.hpp"
+#include "cache_factory.hpp"
 #include "statuses.hpp"
 
 namespace CLI {

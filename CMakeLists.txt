@@ -43,4 +43,19 @@ add_executable(benchmarks_patterns
 add_executable(benchmarks_multilevel
     ${SRC_DIR}/subsidiary.cpp
     ${TEST_DIR}/benchmarks_multilevel.cpp
+    ${SRC_DIR}/report.cpp
 )
+
+set(CLI_SRC_DIR ${SRC_DIR}/command_line)
+
+add_executable(cache_simulator
+    ${CLI_SRC_DIR}/main.cpp
+    ${CLI_SRC_DIR}/command_line_interface.cpp
+    ${CLI_SRC_DIR}/cache_factory.cpp
+    ${CLI_SRC_DIR}/parse_utils.cpp
+    ${SRC_DIR}/subsidiary.cpp
+    ${SRC_DIR}/experiment.cpp
+    ${SRC_DIR}/report.cpp
+)
+
+target_include_directories(cache_simulator PUBLIC ${INCLUDE_DIR}/command_line)
