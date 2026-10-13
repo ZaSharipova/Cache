@@ -6,17 +6,23 @@
 #include <unordered_map>
 #include <optional>
 
+#include "ICache.hpp"
+
 template<typename K, typename V>
-class LIRSCache {
+class LIRSCache : public ICache<K, V> {
 public:
     using key_type = K;
     using value_type = V;
+
+    using ICache<K, V>::hits_;
+    using ICache<K, V>::misses_;
+    using ICache<K, V>::evictions_;
 
     LIRSCache(size_t capacity) : capacity_(capacity),
                                  hir_limit_(std::max<size_t>(capacity / kHirDivisor, 1)),
                                  lir_limit_(capacity - hir_limit_) {}
 
-    std::optional<V> Get(K key) {
+    std::optional<V> Get(K key) override {
         auto it = table_.find(key);
 
         if (it == table_.end()) {
@@ -44,7 +50,7 @@ public:
         return table_.at(key).value;
     }
 
-    void Put(K key, V value) {
+    void Put(K key, V value) override {
         auto it = table_.find(key);
         if (it != table_.end() && it->second.is_resident) {
             it->second.value = value;
@@ -71,16 +77,8 @@ public:
         InsertNewHIR(key, value);
     }
 
-    size_t GetHits() const {
-        return hits_;
-    }
-
-    size_t GetMisses() const {
-        return misses_;
-    }
-
-    size_t GetEvictions() const {
-        return evictions_;
+    std::string GetName() const override {
+        return "LIRS";
     }
 
 private:
@@ -269,8 +267,6 @@ private:
     std::list<K> queue_q_;
 
     std::unordered_map<K, Entry> table_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // LIRS_CACHE_HPP_

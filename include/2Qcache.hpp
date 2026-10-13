@@ -7,17 +7,23 @@
 #include <cassert>
 #include <unordered_map>
 
+#include "ICache.hpp"
+
 template<typename K, typename V>
-class TwoQCache {
+class TwoQCache : public ICache<K, V> {
 public:
     using key_type = K;
     using value_type = V;
+
+    using ICache<K, V>::hits_;
+    using ICache<K, V>::misses_;
+    using ICache<K, V>::evictions_;
 
     TwoQCache(size_t capacity) : a1in_limit_(std::max<size_t>(capacity / kA1inDivisor, 1)),
                                  am_limit_(capacity - a1in_limit_),
                                  a1out_limit_(std::max<size_t>(capacity / kA1outDivisor, 1)) {}
 
-    std::optional<V> Get(K key) {
+    std::optional<V> Get(K key) override {
         auto it = table_.find(key);
         if (it == table_.end()) {
             misses_++;
@@ -43,7 +49,7 @@ public:
         }
     }
 
-    void Put(K key, V value) {
+    void Put(K key, V value) override {
         auto it = table_.find(key);
         if (it == table_.end()) {
             InsertNewKey(key, value);
@@ -71,16 +77,8 @@ public:
         }
     }
 
-    size_t GetHits() const {
-        return hits_;
-    }
-
-    size_t GetMisses() const {
-        return misses_;
-    }
-
-    size_t GetEvictions() const {
-        return evictions_;
+    std::string GetName() const override {
+        return "2Q";
     }
 
 private:
@@ -174,8 +172,6 @@ private:
     std::list<std::pair<K, V>> a1in_;
     std::list<std::pair<K, V>> am_;
     std::list<K> a1out_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // TWO_Q_CACHE_HPP_

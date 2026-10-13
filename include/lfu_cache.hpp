@@ -6,15 +6,21 @@
 #include <cstdint>
 #include <optional>
 
+#include "ICache.hpp"
+
 template <typename K, typename V>
-class LFUCache {
+class LFUCache : public ICache<K, V> {
 public:
     using key_type = K;
     using value_type = V;
 
+    using ICache<K, V>::hits_;
+    using ICache<K, V>::misses_;
+    using ICache<K, V>::evictions_;
+
     LFUCache(size_t capacity) : capacity_(capacity) {}
 
-    std::optional<V> Get(K key) {
+    std::optional<V> Get(K key) override {
         auto it = data_.find(key);
         if (it == data_.end()) {
             misses_++;
@@ -27,7 +33,7 @@ public:
         return entry.value;
     }
 
-    void Put(K key, V value) {
+    void Put(K key, V value) override {
         auto it = data_.find(key);
         if (it != data_.end()) {
             Entry& entry = it->second;
@@ -59,16 +65,8 @@ public:
         data_[key] = {value, 1};
     }
 
-    size_t GetHits() const {
-        return hits_;
-    }
-
-    size_t GetMisses() const {
-        return misses_;
-    }
-
-    size_t GetEvictions() const {
-        return evictions_;
+    std::string GetName() const override {
+        return "LFU";
     }
 
 private:
@@ -80,8 +78,6 @@ private:
     };
 
     std::unordered_map<K, Entry> data_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // LFU_CACHE_HPP_

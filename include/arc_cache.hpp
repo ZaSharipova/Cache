@@ -7,15 +7,21 @@
 #include <unordered_map>
 #include <optional>
 
+#include "ICache.hpp"
+
 template <typename K, typename V>
-class ARCCache {
+class ARCCache : public ICache<K, V> {
 public:
     using key_type = K;
     using value_type = V;
 
+    using ICache<K, V>::hits_;
+    using ICache<K, V>::misses_;
+    using ICache<K, V>::evictions_;
+
     ARCCache(size_t capacity) : capacity_(capacity) {}
 
-    std::optional<V> Get(K key) {
+    std::optional<V> Get(K key) override {
         auto it = table_.find(key);
         if (it == table_.end()) {
             misses_++;
@@ -40,8 +46,8 @@ public:
         }
     }
 
-    void Put(K key, V value) {
-        if (capacity_ == 0) { // не знаю, насколько правильное это решение
+    void Put(K key, V value) override {
+        if (capacity_ == 0) {
             return;
         }
 
@@ -66,16 +72,8 @@ public:
         }
     }
 
-    size_t GetHits() const {
-        return hits_;
-    }
-
-    size_t GetMisses() const {
-        return misses_;
-    }
-
-    size_t GetEvictions() const {
-        return evictions_;
+    std::string GetName() const override {
+        return "ARC";
     }
 
     size_t Size() const {
@@ -203,8 +201,6 @@ private:
     std::list<Entry> t1_, t2_;
     std::list<K> b1_, b2_;
     std::unordered_map<K, Node> table_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // ARC_CACHE_HPP_

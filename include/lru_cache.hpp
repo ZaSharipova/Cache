@@ -6,15 +6,21 @@
 #include <optional>
 #include <unordered_map>
 
+#include "ICache.hpp"
+
 template<typename K, typename V>
-class LRUCache {
+class LRUCache : public ICache<K, V> {
 public:
     using key_type = K;
     using value_type = V;
 
+    using ICache<K, V>::hits_;
+    using ICache<K, V>::misses_;
+    using ICache<K, V>::evictions_;
+
     LRUCache(size_t capacity) : capacity_(capacity) {}
 
-    std::optional<V> Get(K key) {
+    std::optional<V> Get(K key) override {
         auto it = pos_.find(key);
         if (it == pos_.end()) {
             misses_++;
@@ -27,10 +33,10 @@ public:
         return it->second->second;
     }
 
-    void Put(K key, V value) {
+    void Put(K key, V value) override {
         auto it = pos_.find(key);
         if (it != pos_.end()) {
-            it->second->second = value; // если честно не знаю, насколько уместно здесь на entry переходить
+            it->second->second = value;
             order_.splice(order_.begin(), order_, it->second);
             return;
         }
@@ -47,24 +53,14 @@ public:
         pos_[key] = order_.begin();
     }
 
-    size_t GetHits() const {
-        return hits_;
-    }
-
-    size_t GetMisses() const {
-        return misses_;
-    }
-
-    size_t GetEvictions() const {
-        return evictions_;
+    std::string GetName() const override {
+        return "LRU";
     }
 
 private:
     size_t capacity_;
     std::list<std::pair<K, V>> order_;
     std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> pos_;
-
-    size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 
 #endif // LRU_CACHE_HPP_
