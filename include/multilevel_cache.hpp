@@ -1,76 +1,93 @@
 #ifndef MULTILEVEL_CACHE_HPP_
 #define MULTILEVEL_CACHE_HPP_
 
-#include "lru_cache.hpp"
-#include "lfu_cache.hpp"
-#include "2Qcache.hpp"
-#include "opt.hpp"
+#include "ICache.hpp"
 
 #include <iostream>
 #include <optional>
 
-template <typename c1, typename c2>
-class MultiLevelCache {
+template <typename K, typename V>
+class MultiLevelCache : public ICache<K, V> {
 public:
-    static_assert(std::is_same<typename c1::key_type, typename c2::key_type>::value, "c1 and c2 key_values are not the same");
-    static_assert(std::is_same<typename c1::value_type, typename c2::value_type>::value, "c1 and c2 key_values are not the same");
+    using key_type = K;
+    using value_type = V;
 
-    using K = typename c1::key_type;
-    using V = typename c1::value_type;
+    using ICache<K, V>::hits_;
+    using ICache<K, V>::misses_;
 
-    MultiLevelCache(size_t l1_size, size_t l2_size) : cache_l1_(l1_size), cache_l2_(l2_size) {}
+    MultiLevelCache(std::vector<std::unique_ptr<ICache<K, V>>> levels, std::vector<size_t> costs)
+                  : levels_(std::move(levels)), costs_(std::move(costs)), level_hits_(levels_.size(), 0) {}
 
-    std::optional<V> Get(K key) {
-        std::optional<V> ans_l1 = cache_l1_.Get(key);
-        if (ans_l1.has_value()) {
-            hits_l1_++;
-            return ans_l1;
-        }
+    std::optional<V> Get(K key) override {
 
-        std::optional<V> ans_l2 = cache_l2_.Get(key);
-        if (ans_l2.has_value()) {
-            hits_l2_++;
-            cache_l1_.Put(key, ans_l2.value());
-            return ans_l2;
+        for (size_t i = 0; i < levels_.size(); i++) {
+            std::optional<V> value = levels_[i]->Get(key);
+            if (!value.has_value()) {
+                continue;
+            }
+
+            hits_++;
+            level_hits_[i]++;
+
+            for (size_t j = 0; j < i; j++) {
+                levels_[j]->Put(key, *value);
+            }
+
+            return value;
         }
 
         misses_++;
         return std::nullopt;
     }
 
-    void Put(K key, V value) {
-        cache_l1_.Put(key, value);
-        cache_l2_.Put(key, value); // дублирую, потому что использую inclusive способ решения проблемы удаления данных при вытеснении из L1
+    void Put(K key, V value) override {
+        for (auto& level : levels_) {
+            level->Put(key, value); // дублирую, потому что использую inclusive способ решения проблемы удаления данных при вытеснении из более "младшего" уровня
+        }
+    }
+
+    std::string GetName() const override {
+        std::string name;
+        for (size_t i = 0; i < levels_.size(); i++) {
+            if (i != 0) {
+                name += " -> ";
+            }
+
+            name += levels_[i]->GetName();
+        }
+
+        return name;
     }
 
     size_t GetCost() const {
-        return hits_l1_ * hit_l1_value + hits_l2_ * hit_l2_value + misses_ * miss_value;
+        size_t cost = misses_ * costs_.back();
+        for (size_t i = 0; i < levels_.size(); i++) {
+            cost += level_hits_[i] * costs_[i];
+        }
+
+        return cost;
     }
 
-    size_t GetHitsL1() const {
-        return hits_l1_;
-    }
-
-    size_t GetHitsL2() const {
-        return hits_l2_;
-    }
-
-    size_t GetMisses() const {
-        return misses_;
+    size_t GetLevelCount() const {
+        return levels_.size();
     }
 
     size_t GetHits(size_t level) const {
-        return level == 0 ? hits_l1_ : hits_l2_;
+        return level_hits_.at(level);
+    }
+
+    const ICache<K, V>& GetLevel(size_t level) const {
+        return *levels_.at(level);
+    }
+
+    size_t GetLevelHits(size_t level) const {
+        return level_hits_.at(level);
     }
 
 private:
-    c1 cache_l1_;
-    c2 cache_l2_;
-    size_t hits_l1_ = 0, hits_l2_ = 0, misses_ = 0;
-
-    static constexpr size_t hit_l1_value = 1;
-    static constexpr size_t hit_l2_value = 10;
-    static constexpr size_t miss_value = 100;
+    std::vector<std::unique_ptr<ICache<K, V>>> levels_;
+    std::vector<size_t> costs_;
+    std::vector<size_t> level_hits_;
 };
 
 #endif // MULTILEVEL_CACHE_HPP_

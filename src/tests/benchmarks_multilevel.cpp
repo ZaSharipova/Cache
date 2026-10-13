@@ -38,13 +38,6 @@ using Candidates = std::tuple<
 
 constexpr size_t kCandCount = std::tuple_size_v<Candidates>;
 
-template <typename C> struct CacheName;
-template <typename K, typename V> struct CacheName<LRUCache<K, V>>  { static constexpr const char* value = "LRU"; };
-template <typename K, typename V> struct CacheName<LFUCache<K, V>>  { static constexpr const char* value = "LFU"; };
-template <typename K, typename V> struct CacheName<TwoQCache<K, V>> { static constexpr const char* value = "2Q"; };
-template <typename K, typename V> struct CacheName<LIRSCache<K, V>> { static constexpr const char* value = "LIRS"; };
-template <typename K, typename V> struct CacheName<ARCCache<K, V>>  { static constexpr const char* value = "ARC"; };
-
 void PrintResult(const Result& result) {
     std::cout << std::left << std::setw(14) << result.name
               << std::right << std::fixed << std::setprecision(3)
@@ -80,17 +73,19 @@ Result RunMultiLevel(CacheT& cache, const std::vector<K>& trace, const std::stri
 
     return {name, h1, h2, cache.GetMisses(), hit_ratio, cache.GetCost()};
 }
-
 template <size_t I, size_t J>
-void RunPair(const std::vector<int>& trace, size_t l1, size_t l2,
-             std::vector<Result>& results) {
+void RunPair(const std::vector<int>& trace, size_t l1, size_t l2, std::vector<Result>& results) {
     using C1 = std::tuple_element_t<I, Candidates>;
     using C2 = std::tuple_element_t<J, Candidates>;
 
-    MultiLevelCache<C1, C2> cache(l1, l2);
-    std::string name = std::string(CacheName<C1>::value) + " + " + CacheName<C2>::value;
+    std::vector<std::unique_ptr<ICache<int, int>>> levels;
+    levels.push_back(std::make_unique<C1>(l1));
+    levels.push_back(std::make_unique<C2>(l2));
+    std::vector<size_t> costs = {1, 10, 100};
 
-    Result result = RunMultiLevel(cache, trace, name);
+    MultiLevelCache<int, int> cache(std::move(levels), costs);
+
+    Result result = RunMultiLevel(cache, trace, cache.GetName());
     results.push_back(result);
 }
 
