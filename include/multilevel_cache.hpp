@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <string>
 #include <utility>
@@ -22,7 +23,7 @@ public:
     MultiLevelCache(std::vector<std::unique_ptr<ICache<K, V>>> levels, std::vector<size_t> costs)
                   : levels_(std::move(levels)), costs_(std::move(costs)), level_hits_(levels_.size(), 0) {}
 
-    std::optional<V> Get(K key) override {
+    std::optional<V> Get(const K& key) override {
 
         for (size_t i = 0; i < levels_.size(); i++) {
             std::optional<V> value = levels_[i]->Get(key);
@@ -51,25 +52,17 @@ public:
     }
 
     std::string GetName() const override {
-        std::string name;
-        for (size_t i = 0; i < levels_.size(); i++) {
-            if (i != 0) {
-                name += " -> ";
-            }
-
-            name += levels_[i]->GetName();
+        std::string name = levels_[0]->GetName();
+        for (size_t i = 1; i < levels_.size(); i++) {
+            name += (" -> " + levels_[i]->GetName());
         }
 
         return name;
     }
 
     size_t GetCost() const {
-        size_t cost = misses_ * costs_.back();
-        for (size_t i = 0; i < levels_.size(); i++) {
-            cost += level_hits_[i] * costs_[i];
-        }
-
-        return cost;
+        return std::inner_product(level_hits_.begin(), level_hits_.end(), costs_.begin(),
+                                  misses_ * costs_.back());
     }
 
     size_t GetLevelCount() const {

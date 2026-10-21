@@ -21,7 +21,7 @@ public:
 
     ARCCache(size_t capacity) : capacity_(capacity) {}
 
-    std::optional<V> Get(K key) override {
+    std::optional<V> Get(const K& key) override {
         auto it = table_.find(key);
         if (it == table_.end()) {
             misses_++;
@@ -166,7 +166,8 @@ private:
     }
 
     void Replace(bool key_in_b2) {
-        bool replace_from_t1 = !t1_.empty() && (t1_.size() > t1_target_size_ || (key_in_b2 && t1_.size() == t1_target_size_));
+        bool replace_from_t1 = !t1_.empty() && (t1_.size() > t1_target_size_
+                               || (key_in_b2 && t1_.size() == t1_target_size_));
         if (t2_.empty()) {
             replace_from_t1 = true;
         }

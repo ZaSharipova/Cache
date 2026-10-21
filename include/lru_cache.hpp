@@ -20,7 +20,7 @@ public:
 
     LRUCache(size_t capacity) : capacity_(capacity) {}
 
-    std::optional<V> Get(K key) override {
+    std::optional<V> Get(const K& key) override {
         auto it = pos_.find(key);
         if (it == pos_.end()) {
             misses_++;
@@ -34,8 +34,7 @@ public:
     }
 
     void Put(K key, V value) override {
-        auto it = pos_.find(key);
-        if (it != pos_.end()) {
+        if (auto it = pos_.find(key); it != pos_.end()) {
             it->second->second = value;
             order_.splice(order_.begin(), order_, it->second);
             return;
@@ -58,7 +57,7 @@ public:
     }
 
 private:
-    size_t capacity_;
+    size_t capacity_ = 1;
     std::list<std::pair<K, V>> order_;
     std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> pos_;
 };

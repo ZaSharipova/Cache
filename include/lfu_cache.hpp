@@ -1,6 +1,7 @@
 #ifndef LFU_CACHE_HPP_
 #define LFU_CACHE_HPP_
 
+#include <algorithm>
 #include <iostream>
 #include <unordered_map>
 #include <cstdint>
@@ -20,7 +21,7 @@ public:
 
     LFUCache(size_t capacity) : capacity_(capacity) {}
 
-    std::optional<V> Get(K key) override {
+    std::optional<V> Get(const K& key) override {
         auto it = data_.find(key);
         if (it == data_.end()) {
             misses_++;
@@ -43,20 +44,12 @@ public:
         }
 
         if (data_.size() >= capacity_) {
-            size_t min_frequency = SIZE_MAX;
-            K victim = 0;
-            bool found_flag = false;
+            auto victim = std::min_element(data_.begin(), data_.end(),
+                [](const auto& a, const auto& b) {
+                    return a.second.frequency < b.second.frequency;
+                });
 
-            for (auto it : data_) {
-                Entry& entry = it.second;
-                if (entry.frequency < min_frequency) {
-                    min_frequency = entry.frequency;
-                    victim = it.first;
-                    found_flag = true;
-                }
-            }
-
-            if (found_flag) {
+            if (victim != data_.end()) {
                 data_.erase(victim);
                 evictions_++;
             }

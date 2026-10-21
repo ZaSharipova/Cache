@@ -47,7 +47,7 @@ Status RunSetup(const CacheFactory::Setup& setup, const std::vector<size_t>& cos
 }
 
 Result RunOpt(const std::vector<int>& trace, size_t capacity, int seed) {
-    const size_t hits = OPT<int, int>(trace, capacity);
+    const size_t hits = OPT<int>(trace, capacity);
 
     Result result;
     result.name = "OPT(" + std::to_string(capacity) + ")";

@@ -12,7 +12,7 @@ public:
     using value_type = V;
 
     virtual ~ICache() = default;
-    virtual std::optional<V> Get(K key) = 0;
+    virtual std::optional<V> Get(const K& key) = 0;
     virtual void Put(K key, V value) = 0;
     virtual std::string GetName() const = 0;
 

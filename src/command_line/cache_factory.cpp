@@ -1,6 +1,7 @@
 #include "cache_factory.hpp"
 
 #include <iostream>
+#include <optional>
 
 #include "2Qcache.hpp"
 #include "arc_cache.hpp"
@@ -26,15 +27,14 @@ const TypeName kTypeNames[] = {
     {CacheType::kArc, "arc"},
 };
 
-bool FindCacheType(const std::string& name, CacheType& type) {
+std::optional<CacheType> FindCacheType(const std::string& name) {
     for (const TypeName& entry : kTypeNames) {
         if (name == entry.name) {
-            type = entry.type;
-            return true;
+            return entry.type;
         }
     }
 
-    return false;
+    return std::nullopt;
 }
 
 std::unique_ptr<Cache> MakeCache(const CacheSpec& spec) {
@@ -73,9 +73,11 @@ Status ParseCacheSpec(const std::string& text, CacheSpec& spec) {
     }
 
     const std::string type_name = Parse::ToLower(text.substr(0, colon));
-    if (!FindCacheType(type_name, parsed.type)) {
+    if (auto type = FindCacheType(type_name); !type) {
         std::cerr << "error: unknown cache type '" << type_name << "' (see --help)\n";
         return Status::kUnknownCacheType;
+    } else {
+        parsed.type = *type;
     }
 
     spec = parsed;

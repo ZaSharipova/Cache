@@ -154,12 +154,13 @@ TEST(TwoQCacheTest, ReinsertAfterEviction) {
 
 TEST(OptTest, CyclicTrace) {
     std::vector<int> trace = {1, 2, 3, 1, 2, 3, 1, 2, 3};
-    EXPECT_EQ((OPT<int, int>(trace, 2)), 3);
+    EXPECT_EQ((OPT<int>(trace, 2)), 3);
 }
+
 
 TEST(OptTest, RepeatedKey) {
     std::vector<int> trace = {1, 1, 1, 1};
-    EXPECT_EQ((OPT<int, int>(trace, 2)), 3);
+    EXPECT_EQ((OPT<int>(trace, 2)), 3);
 }
 
 TEST(LIRSCacheTest, BasicPutGet) {

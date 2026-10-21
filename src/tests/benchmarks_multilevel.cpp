@@ -104,7 +104,7 @@ int main() {
             results[i].seed = seed;
         }
 
-        size_t opt_hits = OPT<int, int>(hot, l1_size + l2_size);
+        size_t opt_hits = OPT<int>(hot, l1_size + l2_size);
         results.push_back({"OPT", {opt_hits}, hot.size() - opt_hits,
                            static_cast<double>(opt_hits) / hot.size(), 0, seed});
     }

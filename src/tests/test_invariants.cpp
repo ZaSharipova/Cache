@@ -45,6 +45,6 @@ TYPED_TEST(InvariantTest, OptIsUpperBound) {
         TypeParam cache(kCacheSize);
         size_t hits = RunAndGetHits(cache, trace);
 
-        EXPECT_GE((OPT<int, int>(trace, kCacheSize)), hits) << "failed on trace #" << k;
+        EXPECT_GE((OPT<int>(trace, kCacheSize)), hits) << "failed on trace #" << k;
     }
 }

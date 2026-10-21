@@ -22,7 +22,7 @@ public:
                                  hir_limit_(std::max<size_t>(capacity / kHirDivisor, 1)),
                                  lir_limit_(capacity - hir_limit_) {}
 
-    std::optional<V> Get(K key) override {
+    std::optional<V> Get(const K& key) override {
         auto it = table_.find(key);
 
         if (it == table_.end()) {
@@ -40,11 +40,7 @@ public:
         if (entry.is_lir) {
             MoveToStackTop(key);
         } else {
-            if (entry.in_stack) {
-                PromoteToLIR(key);
-            } else {
-                RefreshHIR(key);
-            }
+            (entry.in_stack) ? PromoteToLIR(key) : RefreshHIR(key);
         }
 
         return table_.at(key).value;
@@ -52,19 +48,22 @@ public:
 
     void Put(K key, V value) override {
         auto it = table_.find(key);
-        if (it != table_.end() && it->second.is_resident) {
-            it->second.value = value;
-            if (it->second.is_lir) {
-                MoveToStackTop(key);
-            } else if (it->second.in_stack) {
-                PromoteToLIR(key);
-            } else {
-                RefreshHIR(key);
-            }
-            return;
-        }
+        if (it != table_.end()) {
 
-        if (it != table_.end() && !it->second.is_resident) {
+            auto& entry = it->second;
+            if (entry.is_resident) {
+                entry.value = value;
+                if (entry.is_lir) {
+                    MoveToStackTop(key);
+                } else if (entry.in_stack) {
+                    PromoteToLIR(key);
+                } else {
+                    RefreshHIR(key);
+                }
+
+                return;
+            }
+
             PromoteGhostToLIR(key, value);
             return;
         }
@@ -82,7 +81,6 @@ public:
     }
 
 private:
-
     static constexpr size_t kHirDivisor = 100;
 
     struct Entry {

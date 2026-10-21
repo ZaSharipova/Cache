@@ -23,7 +23,7 @@ public:
                                  am_limit_(capacity - a1in_limit_),
                                  a1out_limit_(std::max<size_t>(capacity / kA1outDivisor, 1)) {}
 
-    std::optional<V> Get(K key) override {
+    std::optional<V> Get(const K& key) override {
         auto it = table_.find(key);
         if (it == table_.end()) {
             misses_++;
