@@ -1,10 +1,10 @@
 #ifndef TWO_Q_CACHE_HPP_
 #define TWO_Q_CACHE_HPP_
 
+#include <cassert>
 #include <iostream>
 #include <list>
 #include <optional>
-#include <cassert>
 #include <unordered_map>
 
 #include "ICache.hpp"
@@ -14,9 +14,13 @@ class TwoQCache : public ICache<K, V> {
 public:
     using key_type = K;
     using value_type = V;
-
     using ICache<K, V>::evictions_;
 
+private:
+    static constexpr size_t kA1inDivisor = 4;
+    static constexpr size_t kA1outDivisor = 2;
+
+public:
     TwoQCache(size_t capacity) : a1in_limit_(std::max<size_t>(capacity / kA1inDivisor, 1)),
                                  am_limit_(capacity - a1in_limit_),
                                  a1out_limit_(std::max<size_t>(capacity / kA1outDivisor, 1)) {}
@@ -54,7 +58,6 @@ public:
     }
 
 private:
-
     enum class Location {
         kAm,
         kA1in,
@@ -91,17 +94,17 @@ private:
         }
     }
 
-    void UpdateInAm(Entry& entry, V value) {
+    void UpdateInAm(Entry& entry, const V& value) {
         entry.data_it->second = value;
         am_.splice(am_.begin(), am_, entry.data_it);
         entry.data_it = am_.begin();
     }
 
-    void UpdateInA1in(Entry& entry, V value) {
+    void UpdateInA1in(Entry& entry, const V& value) {
         entry.data_it->second = value;
     }
 
-    void PromoteFromA1out(K key, Entry& entry, V value) {
+    void PromoteFromA1out(const K& key, Entry& entry, const V& value) {
         a1out_.erase(entry.ghost_it);
 
         if (am_.size() >= am_limit_) {
@@ -114,7 +117,7 @@ private:
         entry.value = value;
     }
 
-    void InsertNewKey(K key, V value) {
+    void InsertNewKey(const K& key, const V& value) {
         if (a1in_.size() >= a1in_limit_) {
             EvictFromA1in();
         }
@@ -154,9 +157,6 @@ private:
             table_.erase(ghost_key);
         }
     }
-
-    static constexpr size_t kA1inDivisor = 4;
-    static constexpr size_t kA1outDivisor = 2;
 
     std::unordered_map<K, Entry> table_;
     const size_t a1in_limit_;

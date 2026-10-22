@@ -8,9 +8,6 @@
 template<typename K, typename V>
 class ICache {
 public:
-    using key_type = K;
-    using value_type = V;
-
     virtual ~ICache() = default;
     std::optional<V> Get(const K& key) {
         auto result = DoGet(key);
@@ -40,6 +37,7 @@ public:
 
 protected:
     virtual std::optional<V> DoGet(const K& key) = 0;
+
     size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 

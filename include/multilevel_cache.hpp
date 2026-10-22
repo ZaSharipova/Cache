@@ -14,9 +14,6 @@
 template <typename K, typename V>
 class MultiLevelCache : public ICache<K, V> {
 public:
-    using key_type = K;
-    using value_type = V;
-
     MultiLevelCache(std::vector<std::unique_ptr<ICache<K, V>>> levels, std::vector<size_t> costs)
                   : levels_(std::move(levels)), costs_(std::move(costs)), level_hits_(levels_.size(), 0) {}
 
@@ -57,10 +54,6 @@ public:
     }
 
 private:
-    std::vector<std::unique_ptr<ICache<K, V>>> levels_;
-    std::vector<size_t> costs_;
-    std::vector<size_t> level_hits_;
-
     std::optional<V> DoGet(const K& key) override {
         for (size_t i = 0; i < levels_.size(); i++) {
             std::optional<V> value = levels_[i]->Get(key);
@@ -79,6 +72,10 @@ private:
 
         return std::nullopt;
     }
+
+    std::vector<std::unique_ptr<ICache<K, V>>> levels_;
+    std::vector<size_t> costs_;
+    std::vector<size_t> level_hits_;
 };
 
 #endif // MULTILEVEL_CACHE_HPP_

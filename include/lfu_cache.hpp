@@ -2,19 +2,16 @@
 #define LFU_CACHE_HPP_
 
 #include <algorithm>
-#include <iostream>
-#include <unordered_map>
 #include <cstdint>
+#include <iostream>
 #include <optional>
+#include <unordered_map>
 
 #include "ICache.hpp"
 
 template <typename K, typename V>
 class LFUCache : public ICache<K, V> {
 public:
-    using key_type = K;
-    using value_type = V;
-
     using ICache<K, V>::evictions_;
 
     LFUCache(size_t capacity) : capacity_(capacity) {}
@@ -48,14 +45,10 @@ public:
     }
 
 private:
-    size_t capacity_;
-
     struct Entry {
         V value;
         size_t frequency;
     };
-
-    std::unordered_map<K, Entry> data_;
 
     std::optional<V> DoGet(const K& key) override {
         auto it = data_.find(key);
@@ -67,6 +60,9 @@ private:
         entry.frequency++;
         return entry.value;
     }
+
+    size_t capacity_ = 1;
+    std::unordered_map<K, Entry> data_;
 };
 
 #endif // LFU_CACHE_HPP_

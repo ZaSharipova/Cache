@@ -1,14 +1,15 @@
 #include "experiment.hpp"
 #include "subsidiary.hpp"
 #include "statuses.hpp"
-
 #include "opt.hpp"
 
 #include <cstddef>
-#include <string>
-#include <vector>
-#include <set>
 #include <numeric>
+#include <string>
+#include <set>
+#include <vector>
+
+namespace {
 
 constexpr int kHotKeys = 100;
 
@@ -19,6 +20,8 @@ static void Replay(CacheFactory::Cache& cache, const std::vector<int>& trace) {
         }
     }
 }
+
+} // namespace
 
 Status RunSetup(const CacheFactory::Setup& setup, const std::vector<size_t>& costs,
                 const std::vector<int>& trace, int seed, Result& result) {

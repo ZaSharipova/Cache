@@ -1,10 +1,10 @@
 #ifndef OPT_HPP_
 #define OPT_HPP_
 
-#include <iostream>
-#include <vector>
-#include <unordered_set>
 #include <algorithm>
+#include <iostream>
+#include <unordered_set>
+#include <vector>
 
 template <typename K, typename V = void>
 size_t OPT(const std::vector<K>& trace, size_t cache_size) {

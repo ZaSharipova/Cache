@@ -5,8 +5,8 @@
 #include "experiment.hpp"
 
 #include <cstddef>
-#include <vector>
 #include <string>
+#include <vector>
 
 void PrintTable(const std::vector<Result>& results, int seed);
 Status WriteCsv(const std::string& path, const std::vector<Result>& results);

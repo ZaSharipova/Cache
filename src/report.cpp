@@ -2,13 +2,13 @@
 #include "experiment.hpp"
 #include "command_line/statuses.hpp"
 
+#include <algorithm>
 #include <cstddef>
-#include <vector>
-#include <string>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <algorithm>
+#include <string>
+#include <vector>
 
 namespace {
 

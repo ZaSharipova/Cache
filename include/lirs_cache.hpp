@@ -3,19 +3,20 @@
 
 #include <iostream>
 #include <list>
-#include <unordered_map>
 #include <optional>
+#include <unordered_map>
 
 #include "ICache.hpp"
 
 template<typename K, typename V>
 class LIRSCache : public ICache<K, V> {
 public:
-    using key_type = K;
-    using value_type = V;
-
     using ICache<K, V>::evictions_;
 
+private:
+    static constexpr size_t kHirDivisor = 100;
+
+public:
     LIRSCache(size_t capacity) : capacity_(capacity),
                                  hir_limit_(std::max<size_t>(capacity / kHirDivisor, 1)),
                                  lir_limit_(capacity - hir_limit_) {}
@@ -23,7 +24,6 @@ public:
     void Put(K key, V value) override {
         auto it = table_.find(key);
         if (it != table_.end()) {
-
             auto& entry = it->second;
             if (entry.is_resident) {
                 entry.value = value;
@@ -55,8 +55,6 @@ public:
     }
 
 private:
-    static constexpr size_t kHirDivisor = 100;
-
     struct Entry {
         V value;
         bool is_lir;
@@ -69,7 +67,6 @@ private:
 
     std::optional<V> DoGet(const K& key) override {
         auto it = table_.find(key);
-
         if (it == table_.end()) {
             return std::nullopt;
         }
@@ -106,7 +103,7 @@ private:
         }
     }
 
-    void MoveToStackTop(K key) {
+    void MoveToStackTop(const K& key) {
         Entry& entry = table_.at(key);
         bool was_at_bottom = (entry.s_it == std::prev(stack_s_.end()));
         stack_s_.splice(stack_s_.begin(), stack_s_, entry.s_it);
@@ -123,13 +120,13 @@ private:
         }
     }
 
-    void AddToQueue(K key, Entry& entry) {
+    void AddToQueue(const K& key, Entry& entry) {
         queue_q_.push_back(key);
         entry.q_it = std::prev(queue_q_.end());
         entry.in_queue = true;
     }
 
-    void PromoteToLIR(K key) {
+    void PromoteToLIR(const K& key) {
         Entry& entry = table_.at(key);
         RemoveFromQueue(entry);
         entry.is_lir = true;
@@ -138,7 +135,7 @@ private:
         DemoteLIRFromBottom();
     }
 
-    void RefreshHIR(K key) {
+    void RefreshHIR(const K& key) {
         Entry& entry = table_.at(key);
         stack_s_.push_front(key);
         entry.s_it = stack_s_.begin();
@@ -169,7 +166,7 @@ private:
         Prune();
     }
 
-    void PromoteGhostToLIR(K key, V value) {
+    void PromoteGhostToLIR(const K& key, const V& value) {
         Entry& entry = table_.at(key);
         if (resident_count_ >= capacity_) {
             EvictFromQueue();
@@ -194,7 +191,7 @@ private:
         }
     }
 
-    void InsertNewHIR(K key, V value) {
+    void InsertNewHIR(const K& key, const V& value) {
         if (resident_count_ >= capacity_) {
             EvictFromQueue();
         }
@@ -216,7 +213,7 @@ private:
         resident_count_++;
     }
 
-    void InsertNewLIR(K key, V value) {
+    void InsertNewLIR(const K& key, const V& value) {
         Entry entry;
         entry.value = value;
         entry.is_lir = true;
@@ -250,9 +247,9 @@ private:
         }
     }
 
-    const size_t capacity_;
-    const size_t hir_limit_;
-    const size_t lir_limit_;
+    const size_t capacity_ = 2;
+    const size_t hir_limit_ = 1;
+    const size_t lir_limit_ = 1;
     size_t lir_count_ = 0;
     size_t resident_count_ = 0;
 

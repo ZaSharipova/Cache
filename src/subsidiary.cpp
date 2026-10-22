@@ -7,7 +7,6 @@
 
 #include "subsidiary.hpp"
 
-
 namespace {
 constexpr int kFirstKey = 1;
 

@@ -4,17 +4,14 @@
 #include <cstdint>
 #include <iostream>
 #include <list>
-#include <unordered_map>
 #include <optional>
+#include <unordered_map>
 
 #include "ICache.hpp"
 
 template <typename K, typename V>
 class ARCCache : public ICache<K, V> {
 public:
-    using key_type = K;
-    using value_type = V;
-
     using ICache<K, V>::evictions_;
 
     ARCCache(size_t capacity) : capacity_(capacity) {}
@@ -112,7 +109,7 @@ private:
         }
     }
 
-    void PromoteFromGhost(K key, Node& node, V value) {
+    void PromoteFromGhost(const K& key, Node& node, const V& value) {
         if (node.location == Location::kB2) {
             size_t difference = std::max<size_t>(b1_.size() / b2_.size(), 1);
             t1_target_size_ = (t1_target_size_ > difference) ? t1_target_size_ - difference : 0;
@@ -130,7 +127,7 @@ private:
         node.data_it = t2_.begin();
     }
 
-    void InsertNewKey(K key, V value) {
+    void InsertNewKey(const K& key, const V& value) {
         const size_t t1_b1_size = t1_.size() + b1_.size();
         const size_t total_size = t1_b1_size + t2_.size() + b2_.size();
 

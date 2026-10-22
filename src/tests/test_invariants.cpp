@@ -4,12 +4,10 @@
 #include "lru_cache.hpp"
 #include "opt.hpp"
 #include "arc_cache.hpp"
-
 #include "subsidiary.hpp"
 
-#include <gtest/gtest.h>
-
 #include <cstdlib>
+#include <gtest/gtest.h>
 #include <vector>
 
 namespace {

@@ -9,16 +9,16 @@
 
 #include "report.hpp"
 
-#include <charconv>
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <vector>
 #include <array>
-#include <tuple>
-#include <utility>
+#include <charconv>
 #include <cstddef>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace {
 

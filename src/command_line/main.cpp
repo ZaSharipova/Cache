@@ -39,8 +39,7 @@ int main(int argc, char** argv) {
         return ExitCode(status);
     }
 
-    std::cout << "pattern hot, trace length: " << config.trace_length
-              << ", seeds: " << config.seeds << " (table for seed " << kReportedSeed << ")\n\n";
+    std::cout << "pattern hot, trace length: " << config.trace_length << "\n\n";
     PrintTable(results, kReportedSeed);
 
     status = WriteCsv(config.output_path, results);

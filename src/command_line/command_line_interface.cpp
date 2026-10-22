@@ -3,12 +3,13 @@
 #include <iostream>
 #include <limits>
 #include <string_view>
-#include <utility>
 #include <vector>
+#include <utility>
 
 #include "parse_utils.hpp"
 
 namespace CLI {
+
 namespace {
 
 enum class Option {
@@ -105,8 +106,7 @@ Status ApplyOption(Option option, std::string_view value, Config& config) {
             const Status status = (option == Option::kSingle)
                 ? ParseSetupWithArity(value, setup, 1, 1, "--single",
                                       "exactly one cache (use --multi for a hierarchy)")
-                : ParseSetupWithArity(value, setup, 2, std::numeric_limits<size_t>::max(),
-                                      "--multi",
+                : ParseSetupWithArity(value, setup, 2, std::numeric_limits<size_t>::max(), "--multi",
                                       "at least two levels (use --single for one cache)");
 
             if (status != Status::kOk) {

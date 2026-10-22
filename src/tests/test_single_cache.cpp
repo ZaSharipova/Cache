@@ -5,9 +5,8 @@
 #include "opt.hpp"
 #include "arc_cache.hpp"
 
-#include <gtest/gtest.h>
-
 #include <cstdlib>
+#include <gtest/gtest.h>
 #include <vector>
 
 namespace {

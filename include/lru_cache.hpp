@@ -11,9 +11,6 @@
 template<typename K, typename V>
 class LRUCache : public ICache<K, V> {
 public:
-    using key_type = K;
-    using value_type = V;
-
     using ICache<K, V>::evictions_;
 
     LRUCache(size_t capacity) : capacity_(capacity) {}
@@ -42,7 +39,6 @@ public:
     }
 
 private:
-
     std::optional<V> DoGet(const K& key) override {
         auto it = pos_.find(key);
         if (it == pos_.end()) {
@@ -50,7 +46,6 @@ private:
         }
 
         order_.splice(order_.begin(), order_, it->second);
-
         return it->second->second;
     }
 

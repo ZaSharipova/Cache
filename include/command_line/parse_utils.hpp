@@ -11,11 +11,8 @@
 namespace Parse {
 
 std::vector<std::string_view> Split(std::string_view text, char delimiter);
-
 std::string ToLower(std::string_view text);
-
 Status ParseSize(std::string_view text, std::string_view what, size_t& out);
-
 Status ParseInt(std::string_view text, std::string_view what, int& out);
 
 } // namespace Parse
