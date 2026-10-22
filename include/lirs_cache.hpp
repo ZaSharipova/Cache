@@ -14,37 +14,11 @@ public:
     using key_type = K;
     using value_type = V;
 
-    using ICache<K, V>::hits_;
-    using ICache<K, V>::misses_;
     using ICache<K, V>::evictions_;
 
     LIRSCache(size_t capacity) : capacity_(capacity),
                                  hir_limit_(std::max<size_t>(capacity / kHirDivisor, 1)),
                                  lir_limit_(capacity - hir_limit_) {}
-
-    std::optional<V> Get(const K& key) override {
-        auto it = table_.find(key);
-
-        if (it == table_.end()) {
-            misses_++;
-            return std::nullopt;
-        }
-
-        Entry& entry = it->second;
-        if (!entry.is_resident) {
-            misses_++;
-            return std::nullopt;
-        }
-
-        hits_++;
-        if (entry.is_lir) {
-            MoveToStackTop(key);
-        } else {
-            (entry.in_stack) ? PromoteToLIR(key) : RefreshHIR(key);
-        }
-
-        return table_.at(key).value;
-    }
 
     void Put(K key, V value) override {
         auto it = table_.find(key);
@@ -92,6 +66,27 @@ private:
         typename std::list<K>::iterator q_it;
         bool in_queue;
     };
+
+    std::optional<V> DoGet(const K& key) override {
+        auto it = table_.find(key);
+
+        if (it == table_.end()) {
+            return std::nullopt;
+        }
+
+        Entry& entry = it->second;
+        if (!entry.is_resident) {
+            return std::nullopt;
+        }
+
+        if (entry.is_lir) {
+            MoveToStackTop(key);
+        } else {
+            (entry.in_stack) ? PromoteToLIR(key) : RefreshHIR(key);
+        }
+
+        return table_.at(key).value;
+    }
 
     void Prune() {
         while (!stack_s_.empty()) {

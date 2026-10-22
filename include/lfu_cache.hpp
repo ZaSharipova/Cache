@@ -15,24 +15,9 @@ public:
     using key_type = K;
     using value_type = V;
 
-    using ICache<K, V>::hits_;
-    using ICache<K, V>::misses_;
     using ICache<K, V>::evictions_;
 
     LFUCache(size_t capacity) : capacity_(capacity) {}
-
-    std::optional<V> Get(const K& key) override {
-        auto it = data_.find(key);
-        if (it == data_.end()) {
-            misses_++;
-            return std::nullopt;
-        }
-
-        hits_++;
-        Entry& entry = it->second;
-        entry.frequency++;
-        return entry.value;
-    }
 
     void Put(K key, V value) override {
         auto it = data_.find(key);
@@ -71,6 +56,17 @@ private:
     };
 
     std::unordered_map<K, Entry> data_;
+
+    std::optional<V> DoGet(const K& key) override {
+        auto it = data_.find(key);
+        if (it == data_.end()) {
+            return std::nullopt;
+        }
+
+        Entry& entry = it->second;
+        entry.frequency++;
+        return entry.value;
+    }
 };
 
 #endif // LFU_CACHE_HPP_

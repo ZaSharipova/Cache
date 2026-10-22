@@ -12,7 +12,17 @@ public:
     using value_type = V;
 
     virtual ~ICache() = default;
-    virtual std::optional<V> Get(const K& key) = 0;
+    std::optional<V> Get(const K& key) {
+        auto result = DoGet(key);
+        if (result.has_value()) {
+            hits_++;
+        } else {
+            misses_++;
+        }
+
+        return result;
+    }
+
     virtual void Put(K key, V value) = 0;
     virtual std::string GetName() const = 0;
 
@@ -29,6 +39,7 @@ public:
     }
 
 protected:
+    virtual std::optional<V> DoGet(const K& key) = 0;
     size_t hits_ = 0, misses_ = 0, evictions_ = 0;
 };
 

@@ -15,36 +15,9 @@ public:
     using key_type = K;
     using value_type = V;
 
-    using ICache<K, V>::hits_;
-    using ICache<K, V>::misses_;
     using ICache<K, V>::evictions_;
 
     ARCCache(size_t capacity) : capacity_(capacity) {}
-
-    std::optional<V> Get(const K& key) override {
-        auto it = table_.find(key);
-        if (it == table_.end()) {
-            misses_++;
-            return std::nullopt;
-        }
-
-        Node& node = it->second;
-        switch (node.location) {
-            case (Location::kT1):
-            case (Location::kT2):
-                hits_++;
-                MoveToT2Front(node);
-                return node.data_it->value;
-
-            case (Location::kB1):
-            case (Location::kB2):
-                misses_++;
-                return std::nullopt;
-
-            default:
-                return std::nullopt;
-        }
-    }
 
     void Put(K key, V value) override {
         if (capacity_ == 0) {
@@ -92,7 +65,6 @@ public:
     }
 
 private:
-
     struct Entry {
         K key;
         V value;
@@ -110,6 +82,26 @@ private:
         typename std::list<Entry>::iterator data_it;
         typename std::list<K>::iterator ghost_it;
     };
+
+    std::optional<V> DoGet(const K& key) override {
+        auto it = table_.find(key);
+        if (it == table_.end()) {
+            return std::nullopt;
+        }
+
+        Node& node = it->second;
+        switch (node.location) {
+            case (Location::kT1):
+            case (Location::kT2):
+                MoveToT2Front(node);
+                return node.data_it->value;
+
+            case (Location::kB1):
+            case (Location::kB2):
+            default:
+                return std::nullopt;
+        }
+    }
 
     void MoveToT2Front(Node& node) {
         if (node.location == Location::kT1) {

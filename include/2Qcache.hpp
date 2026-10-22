@@ -15,39 +15,11 @@ public:
     using key_type = K;
     using value_type = V;
 
-    using ICache<K, V>::hits_;
-    using ICache<K, V>::misses_;
     using ICache<K, V>::evictions_;
 
     TwoQCache(size_t capacity) : a1in_limit_(std::max<size_t>(capacity / kA1inDivisor, 1)),
                                  am_limit_(capacity - a1in_limit_),
                                  a1out_limit_(std::max<size_t>(capacity / kA1outDivisor, 1)) {}
-
-    std::optional<V> Get(const K& key) override {
-        auto it = table_.find(key);
-        if (it == table_.end()) {
-            misses_++;
-            return std::nullopt;
-        }
-
-        Entry& entry = it->second;
-        switch(entry.location) {
-            case (Location::kAm):
-                hits_++;
-                am_.splice(am_.begin(), am_, entry.data_it);
-                entry.data_it = am_.begin();
-                return entry.data_it->second;
-
-            case (Location::kA1in):
-                hits_++;
-                return entry.data_it->second;
-
-            case (Location::kA1out):
-                misses_++;
-            default:
-                return std::nullopt;
-        }
-    }
 
     void Put(K key, V value) override {
         auto it = table_.find(key);
@@ -96,6 +68,28 @@ private:
         typename std::list<std::pair<K, V>>::iterator data_it;
         typename std::list<K>::iterator ghost_it;
     };
+
+    std::optional<V> DoGet(const K& key) override {
+        auto it = table_.find(key);
+        if (it == table_.end()) {
+            return std::nullopt;
+        }
+
+        Entry& entry = it->second;
+        switch(entry.location) {
+            case (Location::kAm):
+                am_.splice(am_.begin(), am_, entry.data_it);
+                entry.data_it = am_.begin();
+                return entry.data_it->second;
+
+            case (Location::kA1in):
+                return entry.data_it->second;
+
+            case (Location::kA1out):
+            default:
+                return std::nullopt;
+        }
+    }
 
     void UpdateInAm(Entry& entry, V value) {
         entry.data_it->second = value;

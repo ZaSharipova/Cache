@@ -14,24 +14,9 @@ public:
     using key_type = K;
     using value_type = V;
 
-    using ICache<K, V>::hits_;
-    using ICache<K, V>::misses_;
     using ICache<K, V>::evictions_;
 
     LRUCache(size_t capacity) : capacity_(capacity) {}
-
-    std::optional<V> Get(const K& key) override {
-        auto it = pos_.find(key);
-        if (it == pos_.end()) {
-            misses_++;
-            return std::nullopt;
-        }
-
-        hits_++;
-        order_.splice(order_.begin(), order_, it->second);
-
-        return it->second->second;
-    }
 
     void Put(K key, V value) override {
         if (auto it = pos_.find(key); it != pos_.end()) {
@@ -57,6 +42,18 @@ public:
     }
 
 private:
+
+    std::optional<V> DoGet(const K& key) override {
+        auto it = pos_.find(key);
+        if (it == pos_.end()) {
+            return std::nullopt;
+        }
+
+        order_.splice(order_.begin(), order_, it->second);
+
+        return it->second->second;
+    }
+
     size_t capacity_ = 1;
     std::list<std::pair<K, V>> order_;
     std::unordered_map<K, typename std::list<std::pair<K, V>>::iterator> pos_;

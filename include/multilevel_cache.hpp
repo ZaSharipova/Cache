@@ -17,33 +17,8 @@ public:
     using key_type = K;
     using value_type = V;
 
-    using ICache<K, V>::hits_;
-    using ICache<K, V>::misses_;
-
     MultiLevelCache(std::vector<std::unique_ptr<ICache<K, V>>> levels, std::vector<size_t> costs)
                   : levels_(std::move(levels)), costs_(std::move(costs)), level_hits_(levels_.size(), 0) {}
-
-    std::optional<V> Get(const K& key) override {
-
-        for (size_t i = 0; i < levels_.size(); i++) {
-            std::optional<V> value = levels_[i]->Get(key);
-            if (!value.has_value()) {
-                continue;
-            }
-
-            hits_++;
-            level_hits_[i]++;
-
-            for (size_t j = 0; j < i; j++) {
-                levels_[j]->Put(key, *value);
-            }
-
-            return value;
-        }
-
-        misses_++;
-        return std::nullopt;
-    }
 
     void Put(K key, V value) override {
         for (auto& level : levels_) {
@@ -62,7 +37,7 @@ public:
 
     size_t GetCost() const {
         return std::inner_product(level_hits_.begin(), level_hits_.end(), costs_.begin(),
-                                  misses_ * costs_.back());
+                                  this->misses_ * costs_.back());
     }
 
     size_t GetLevelCount() const {
@@ -85,6 +60,25 @@ private:
     std::vector<std::unique_ptr<ICache<K, V>>> levels_;
     std::vector<size_t> costs_;
     std::vector<size_t> level_hits_;
+
+    std::optional<V> DoGet(const K& key) override {
+        for (size_t i = 0; i < levels_.size(); i++) {
+            std::optional<V> value = levels_[i]->Get(key);
+            if (!value.has_value()) {
+                continue;
+            }
+
+            level_hits_[i]++;
+
+            for (size_t j = 0; j < i; j++) {
+                levels_[j]->Put(key, *value);
+            }
+
+            return value;
+        }
+
+        return std::nullopt;
+    }
 };
 
 #endif // MULTILEVEL_CACHE_HPP_
