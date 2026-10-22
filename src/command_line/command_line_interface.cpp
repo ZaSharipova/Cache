@@ -1,6 +1,10 @@
 #include "command_line_interface.hpp"
 
 #include <iostream>
+#include <limits>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 #include "parse_utils.hpp"
 
@@ -15,42 +19,36 @@ enum class Option {
     kSeeds,
     kOut,
     kHelp,
-    kUnknown,
 };
 
-Option ParseOption(const std::string& text) {
-    if (text == "--single") {
-        return Option::kSingle;
+struct OptionSpec {
+    std::string_view name;
+    Option option;
+    bool needs_value;
+};
+
+constexpr OptionSpec kOptions[] = {
+    {"--single", Option::kSingle, true},
+    {"--multi",  Option::kMulti,  true},
+    {"--costs",  Option::kCosts,  true},
+    {"--length", Option::kLength, true},
+    {"--seeds",  Option::kSeeds,  true},
+    {"--out",    Option::kOut,    true},
+    {"-h",       Option::kHelp,   false},
+    {"--help",   Option::kHelp,   false},
+};
+
+const OptionSpec* FindOption(std::string_view text) {
+    for (const OptionSpec& spec : kOptions) {
+        if (text == spec.name) {
+            return &spec;
+        }
     }
 
-    if (text == "--multi") {
-        return Option::kMulti;
-    }
-
-    if (text == "--costs") {
-        return Option::kCosts;
-    }
-
-    if (text == "--length") {
-        return Option::kLength;
-    }
-
-    if (text == "--seeds") {
-        return Option::kSeeds;
-    }
-
-    if (text == "--out") {
-        return Option::kOut;
-    }
-
-    if (text == "-h" || text == "--help") {
-        return Option::kHelp;
-    }
-
-    return Option::kUnknown;
+    return nullptr;
 }
 
-Status ParsePositiveInt(const std::string& text, const std::string& what, int& out) {
+Status ParsePositiveInt(std::string_view text, std::string_view what, int& out) {
     int value = 0;
     const Status status = Parse::ParseInt(text, what, value);
     if (status != Status::kOk) {
@@ -66,38 +64,25 @@ Status ParsePositiveInt(const std::string& text, const std::string& what, int& o
     return Status::kOk;
 }
 
-Status ParseSingle(const std::string& text, CacheFactory::Setup& setup) {
+Status ParseSetupWithArity(std::string_view text, CacheFactory::Setup& setup, size_t min_levels,
+                           size_t max_levels, std::string_view flag, std::string_view expectation) {
     const Status status = CacheFactory::ParseSetup(text, setup);
     if (status != Status::kOk) {
         return status;
     }
 
-    if (setup.size() != 1) {
-        std::cerr << "error: --single expects exactly one cache, got " << setup.size()
-                  << " (use --multi for a hierarchy)\n";
+    if (setup.size() < min_levels || setup.size() > max_levels) {
+        std::cerr << "error: " << flag << " expects " << expectation
+                  << ", got " << setup.size() << "\n";
         return Status::kWrongLevelCount;
     }
 
     return Status::kOk;
 }
 
-Status ParseMulti(const std::string& text, CacheFactory::Setup& setup) {
-    const Status status = CacheFactory::ParseSetup(text, setup);
-    if (status != Status::kOk) {
-        return status;
-    }
-
-    if (setup.size() < 2) {
-        std::cerr << "error: --multi expects at least two levels (use --single for one cache)\n";
-        return Status::kWrongLevelCount;
-    }
-
-    return Status::kOk;
-}
-
-Status ParseCosts(const std::string& text, std::vector<size_t>& costs) {
+Status ParseCosts(std::string_view text, std::vector<size_t>& costs) {
     std::vector<size_t> parsed;
-    for (const std::string& part : Parse::Split(text, ',')) {
+    for (std::string_view part : Parse::Split(text, ',')) {
         size_t cost = 0;
         const Status status = Parse::ParseSize(part, "cost", cost);
         if (status != Status::kOk) {
@@ -107,28 +92,30 @@ Status ParseCosts(const std::string& text, std::vector<size_t>& costs) {
         parsed.push_back(cost);
     }
 
-    costs = parsed;
+    costs = std::move(parsed);
     return Status::kOk;
 }
 
-Status ApplyOption(Option option, const std::string& value, Config& config) {
-    CacheFactory::Setup setup;
-    Status status = Status::kOk;
-
+Status ApplyOption(Option option, std::string_view value, Config& config) {
     switch (option) {
         case Option::kSingle:
-            status = ParseSingle(value, setup);
-            if (status == Status::kOk) {
-                config.setups.push_back(setup);
-            }
-            return status;
+        case Option::kMulti: {
+            CacheFactory::Setup setup;
 
-        case Option::kMulti:
-            status = ParseMulti(value, setup);
-            if (status == Status::kOk) {
-                config.setups.push_back(setup);
+            const Status status = (option == Option::kSingle)
+                ? ParseSetupWithArity(value, setup, 1, 1, "--single",
+                                      "exactly one cache (use --multi for a hierarchy)")
+                : ParseSetupWithArity(value, setup, 2, std::numeric_limits<size_t>::max(),
+                                      "--multi",
+                                      "at least two levels (use --single for one cache)");
+
+            if (status != Status::kOk) {
+                return status;
             }
-            return status;
+
+            config.setups.push_back(std::move(setup));
+            return Status::kOk;
+        }
 
         case Option::kCosts:
             return ParseCosts(value, config.costs);
@@ -144,24 +131,28 @@ Status ApplyOption(Option option, const std::string& value, Config& config) {
             return Status::kOk;
 
         case Option::kHelp:
-        case Option::kUnknown:
-            break;
+            return Status::kOk;
     }
 
-    return Status::kUnknownOption;
+    return Status::kOk;
 }
 
 std::vector<CacheFactory::Setup> DefaultSetups() {
-    const size_t kL1Size = 3;
-    const size_t kL2Size = 15;
+    constexpr size_t kL1Size = 3;
+    constexpr size_t kL2Size = 15;
+
+    const auto types = CacheFactory::AllCacheTypes();
 
     std::vector<CacheFactory::Setup> setups;
-    for (CacheFactory::CacheType first : CacheFactory::AllCacheTypes()) {
-        for (CacheFactory::CacheType second : CacheFactory::AllCacheTypes()) {
+    setups.reserve(types.size() * types.size());
+
+    for (CacheFactory::CacheType first : types) {
+        for (CacheFactory::CacheType second : types) {
             CacheFactory::Setup setup;
+            setup.reserve(2);
             setup.push_back({first, kL1Size});
             setup.push_back({second, kL2Size});
-            setups.push_back(setup);
+            setups.push_back(std::move(setup));
         }
     }
 
@@ -173,14 +164,19 @@ Status ValidateCosts(const Config& config) {
         return Status::kOk;
     }
 
-    for (const CacheFactory::Setup& setup : config.setups) {
-        if (config.costs.size() != setup.size() + 1) {
-            std::cerr << "error: --costs needs " << setup.size() + 1 << " values for '"
-                      << CacheFactory::Describe(setup) << "' (" << setup.size()
-                      << " levels + miss cost), got " << config.costs.size() << "\n";
+    if (config.setups.size() > 1) {
+        std::cerr << "error: --costs applies to a single configuration, but "
+                  << config.setups.size() << " were given"
+                     " (pass exactly one --single or --multi)\n";
+        return Status::kCostsMismatch;
+    }
 
-            return Status::kCostsMismatch;
-        }
+    const CacheFactory::Setup& setup = config.setups.front();
+    if (config.costs.size() != setup.size() + 1) {
+        std::cerr << "error: --costs needs " << setup.size() + 1 << " values for '"
+                  << CacheFactory::Describe(setup) << "' (" << setup.size()
+                  << " levels + miss cost), got " << config.costs.size() << "\n";
+        return Status::kCostsMismatch;
     }
 
     return Status::kOk;
@@ -192,26 +188,28 @@ Status ParseArgs(int argc, char** argv, Config& config) {
     CLI::ArgCursor args(argc, argv);
 
     while (args.HasNext()) {
-        const std::string text = args.Next();
-        const Option option = ParseOption(text);
+        const std::string_view text = args.Next();
+        const OptionSpec* spec = FindOption(text);
 
-        if (option == Option::kHelp) {
-            config.show_help = true;
-            return Status::kOk;
-        }
-
-        if (option == Option::kUnknown) {
+        if (spec == nullptr) {
             std::cerr << "error: unknown option '" << text << "'\n";
             return Status::kUnknownOption;
         }
 
-        std::string value;
-        Status status = args.NextValue(text, value);
-        if (status != Status::kOk) {
-            return status;
+        if (spec->option == Option::kHelp) {
+            config.show_help = true;
+            return Status::kOk;
         }
 
-        status = ApplyOption(option, value, config);
+        std::string_view value;
+        if (spec->needs_value) {
+            const Status status = args.NextValue(text, value);
+            if (status != Status::kOk) {
+                return status;
+            }
+        }
+
+        const Status status = ApplyOption(spec->option, value, config);
         if (status != Status::kOk) {
             return status;
         }

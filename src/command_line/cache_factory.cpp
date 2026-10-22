@@ -54,7 +54,7 @@ std::unique_ptr<Cache> MakeCache(const CacheSpec& spec) {
     return nullptr;
 }
 
-Status ParseCacheSpec(const std::string& text, CacheSpec& spec) {
+Status ParseCacheSpec(std::string_view text, CacheSpec& spec) {
     const size_t colon = text.find(':');
     if (colon == std::string::npos) {
         std::cerr << "error: expected <type>:<size>, got '" << text << "'\n";
@@ -116,9 +116,9 @@ std::string CacheTypeName(CacheType type) {
     return "";
 }
 
-Status ParseSetup(const std::string& text, Setup& setup) {
+Status ParseSetup(std::string_view text, Setup& setup) {
     Setup parsed;
-    for (const std::string& part : Parse::Split(text, ',')) {
+    for (std::string_view part : Parse::Split(text, ',')) {
         CacheSpec spec;
         const Status status = ParseCacheSpec(part, spec);
         if (status != Status::kOk) {
@@ -128,7 +128,7 @@ Status ParseSetup(const std::string& text, Setup& setup) {
         parsed.push_back(spec);
     }
 
-    setup = parsed;
+    setup = std::move(parsed);
     return Status::kOk;
 }
 

@@ -32,7 +32,7 @@ using Setup = std::vector<CacheSpec>;
 
 std::vector<CacheType> AllCacheTypes();
 std::string CacheTypeName(CacheType type);
-Status ParseSetup(const std::string& text, Setup& setup);
+Status ParseSetup(std::string_view text, Setup& setup);
 std::string Describe(const Setup& setup);
 size_t TotalSize(const Setup& setup);
 Status MakeMultiLevel(const Setup& setup, std::vector<size_t> costs, std::unique_ptr<MLCache>& out);

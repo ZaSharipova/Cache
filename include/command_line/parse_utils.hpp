@@ -3,18 +3,20 @@
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "statuses.hpp"
 
 namespace Parse {
 
-std::vector<std::string> Split(const std::string& text, char delimiter);
+std::vector<std::string_view> Split(std::string_view text, char delimiter);
 
-std::string ToLower(const std::string& text);
+std::string ToLower(std::string_view text);
 
-Status ParseSize(const std::string& text, const std::string& what, size_t& out);
-Status ParseInt(const std::string& text, const std::string& what, int& out);
+Status ParseSize(std::string_view text, std::string_view what, size_t& out);
+
+Status ParseInt(std::string_view text, std::string_view what, int& out);
 
 } // namespace Parse
 

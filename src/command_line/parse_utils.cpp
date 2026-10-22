@@ -2,36 +2,30 @@
 #include "statuses.hpp"
 
 #include <cctype>
+#include <charconv>
 #include <iostream>
-#include <limits>
+#include <system_error>
 
 namespace Parse {
 
 namespace {
 
-Status FailParse(const std::string& what, const std::string& text) {
-    std::cerr << "error: invalid " << what << ": '" << text << "'\n";
-    return Status::kInvalidNumber;
-}
-
 template <typename T>
-Status ParseUnsigned(const std::string& text, const std::string& what, T& out) {
-    if (text.empty()) {
-        return FailParse(what, text);
+Status ParseNumber(std::string_view text, std::string_view what, T& out) {
+    T value = 0;
+    const char* const begin = text.data();
+    const char* const end = begin + text.size();
+
+    const std::from_chars_result result = std::from_chars(begin, end, value);
+
+    if (result.ec == std::errc::result_out_of_range) {
+        std::cerr << "error: " << what << " is out of range: '" << text << "'\n";
+        return Status::kInvalidNumber;
     }
 
-    T value = 0;
-    for (char ch : text) {
-        if (ch < '0' || ch > '9') {
-            return FailParse(what, text);
-        }
-
-        const T digit = static_cast<T>(ch - '0');
-        if (value > (std::numeric_limits<T>::max() - digit) / 10) {
-            return FailParse(what, text);
-        }
-
-        value = value * 10 + digit;
+    if (result.ec != std::errc() || result.ptr != end) {
+        std::cerr << "error: invalid " << what << ": '" << text << "'\n";
+        return Status::kInvalidNumber;
     }
 
     out = value;
@@ -40,13 +34,13 @@ Status ParseUnsigned(const std::string& text, const std::string& what, T& out) {
 
 } // namespace
 
-std::vector<std::string> Split(const std::string& text, char delimiter) {
-    std::vector<std::string> parts;
+std::vector<std::string_view> Split(std::string_view text, char delimiter) {
+    std::vector<std::string_view> parts;
     size_t begin = 0;
 
     while (true) {
         const size_t pos = text.find(delimiter, begin);
-        if (pos == std::string::npos) {
+        if (pos == std::string_view::npos) {
             parts.push_back(text.substr(begin));
             break;
         }
@@ -58,21 +52,21 @@ std::vector<std::string> Split(const std::string& text, char delimiter) {
     return parts;
 }
 
-std::string ToLower(const std::string& text) {
+std::string ToLower(std::string_view text) {
     std::string result(text);
     for (char& ch : result) {
-        ch = static_cast<char>(std::tolower(ch));
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
     }
 
     return result;
 }
 
-Status ParseSize(const std::string& text, const std::string& what, size_t& out) {
-    return ParseUnsigned(text, what, out);
+Status ParseSize(std::string_view text, std::string_view what, size_t& out) {
+    return ParseNumber(text, what, out);
 }
 
-Status ParseInt(const std::string& text, const std::string& what, int& out) {
-    return ParseUnsigned(text, what, out);
+Status ParseInt(std::string_view text, std::string_view what, int& out) {
+    return ParseNumber(text, what, out);
 }
 
 } // namespace Parse

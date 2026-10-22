@@ -24,36 +24,49 @@ size_t MaxLevels(const std::vector<Result>& results) {
 } // namespace
 
 void PrintTable(const std::vector<Result>& results, int seed) {
-    size_t name_width = std::string("config").size();
+    constexpr int kLevelWidth = 8;
+    constexpr int kMissWidth  = 8;
+    constexpr int kRatioWidth = 10;
+    constexpr int kCostWidth  = 12;
+    constexpr int kTailWidth  = kMissWidth + kRatioWidth + kCostWidth;
+    constexpr std::string_view kNameHeader = "config";
+
+    int name_width = static_cast<int>(kNameHeader.size());
     for (const Result& result : results) {
         if (result.seed == seed) {
-            name_width = std::max(name_width, result.name.size());
+            name_width = std::max(name_width, static_cast<int>(result.name.size()));
         }
     }
     name_width += 2;
 
     const size_t levels = MaxLevels(results);
-
-    std::cout << std::left << std::setw(static_cast<int>(name_width)) << "config" << std::right;
+    std::cout << std::left << std::setw(name_width) << kNameHeader << std::right;
     for (size_t i = 1; i <= levels; i++) {
-        std::cout << std::setw(8) << ("L" + std::to_string(i));
+        std::cout << std::setw(kLevelWidth) << ("L" + std::to_string(i));
     }
 
-    std::cout << std::setw(8) << "miss" << std::setw(10) << "hit_ratio" << std::setw(12) << "cost" << "\n";
-    std::cout << std::string(name_width + 8 * levels + 30, '-') << "\n";
+    std::cout << std::setw(kMissWidth) << "miss"
+              << std::setw(kRatioWidth) << "hit_ratio"
+              << std::setw(kCostWidth) << "cost" << "\n";
+
+    const size_t rule_width = static_cast<size_t>(name_width)
+                            + static_cast<size_t>(kLevelWidth) * levels
+                            + static_cast<size_t>(kTailWidth);
+    std::cout << std::string(rule_width, '-') << "\n";
+    std::cout << std::fixed << std::setprecision(3);
 
     for (const Result& result : results) {
         if (result.seed != seed) {
             continue;
         }
 
-        std::cout << std::left << std::setw(static_cast<int>(name_width)) << result.name << std::right;
+        std::cout << std::left << std::setw(name_width) << result.name << std::right;
         for (size_t i = 0; i < levels; i++) {
-            std::cout << std::setw(8) << (i < result.hits.size() ? result.hits[i] : 0);
+            std::cout << std::setw(kLevelWidth) << (i < result.hits.size() ? result.hits[i] : 0);
         }
-        std::cout << std::setw(8) << result.misses
-                  << std::setw(10) << std::fixed << std::setprecision(3) << result.hit_ratio
-                  << std::setw(12) << result.cost << "\n";
+        std::cout << std::setw(kMissWidth) << result.misses
+                  << std::setw(kRatioWidth) << result.hit_ratio
+                  << std::setw(kCostWidth) << result.cost << "\n";
     }
 }
 

@@ -2,9 +2,10 @@
 #define CLI_HPP_
 
 #include <cstddef>
-#include <string>
-#include <vector>
 #include <iostream>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include "cache_factory.hpp"
 #include "statuses.hpp"
@@ -26,8 +27,9 @@ Status ParseArgs(int argc, char** argv, Config& config);
 class ArgCursor {
 public:
     ArgCursor(int argc, char** argv) {
+        args_.reserve(static_cast<size_t>(argc > 1 ? argc - 1 : 0));
         for (int i = 1; i < argc; ++i) {
-            args_.push_back(argv[i]);
+            args_.emplace_back(argv[i]);
         }
     }
 
@@ -35,11 +37,11 @@ public:
         return index_ < args_.size();
     }
 
-    const std::string& Next() {
+    std::string_view Next() {
         return args_[index_++];
     }
 
-    Status NextValue(const std::string& option, std::string& value) {
+    Status NextValue(std::string_view option, std::string_view& value) {
         if (!HasNext()) {
             std::cerr << "error: missing value for " << option << "\n";
             return Status::kMissingValue;
@@ -50,7 +52,7 @@ public:
     }
 
 private:
-    std::vector<std::string> args_;
+    std::vector<std::string_view> args_;
     size_t index_ = 0;
 };
 

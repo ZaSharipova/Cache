@@ -1,11 +1,12 @@
 #include "subsidiary.hpp"
 
+#include <cstdlib>
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include "subsidiary.hpp"
 
-#include <cstdlib>
 
 namespace {
 constexpr int kFirstKey = 1;
@@ -18,6 +19,7 @@ constexpr int kMixedHotKeysCount = 5;
 constexpr int kMixedScanFirstKey = 100;
 constexpr int kMixedScanLastKey = 999;
 constexpr int kMixedHotChanceOutOf = 2;
+
 } // namespace
 
 std::vector<int> MakeScan(int num_keys, int length) {
@@ -32,18 +34,24 @@ std::vector<int> MakeScan(int num_keys, int length) {
 }
 
 std::vector<int> MakeMixed(int length, unsigned seed) {
-    srand(seed);
+    std::mt19937 gen(seed);
+
+    std::uniform_int_distribution<int> hot_chance(0, kMixedHotChanceOutOf - 1);
+    std::uniform_int_distribution<int> hot_key(kFirstKey,
+                                               kFirstKey + kMixedHotKeysCount - 1);
 
     std::vector<int> trace;
-
     trace.reserve(length);
+
     int scan_key = kMixedScanFirstKey;
     for (int i = 0; i < length; i++) {
-        if (rand() % kMixedHotChanceOutOf == 0) {
-            trace.push_back(rand() % kMixedHotKeysCount + kFirstKey);
+        if (hot_chance(gen) == 0) {
+            trace.push_back(hot_key(gen));
         } else {
             trace.push_back(scan_key++);
-            if (scan_key > kMixedScanLastKey) scan_key = kMixedScanFirstKey;
+            if (scan_key > kMixedScanLastKey) {
+                scan_key = kMixedScanFirstKey;
+            }
         }
     }
 
@@ -51,16 +59,22 @@ std::vector<int> MakeMixed(int length, unsigned seed) {
 }
 
 std::vector<int> MakeHot(int num_keys, int length, unsigned seed) {
-    srand(seed);
+    std::mt19937 gen(seed);
+
+    std::uniform_int_distribution<int> percent(0, kPercentBase - 1);
+    std::uniform_int_distribution<int> hot_key(kFirstKey,
+                                               kFirstKey + kHotKeysCount - 1);
+    std::uniform_int_distribution<int> any_key(kFirstKey,
+                                               kFirstKey + num_keys - 1);
 
     std::vector<int> trace;
-
     trace.reserve(length);
+
     for (int i = 0; i < length; i++) {
-        if (rand() % kPercentBase < kHotAccessPercent) {
-            trace.push_back(rand() % kHotKeysCount + kFirstKey);
+        if (percent(gen) < kHotAccessPercent) {
+            trace.push_back(hot_key(gen));
         } else {
-            trace.push_back(rand() % num_keys + kFirstKey);
+            trace.push_back(any_key(gen));
         }
     }
 
@@ -68,29 +82,37 @@ std::vector<int> MakeHot(int num_keys, int length, unsigned seed) {
 }
 
 std::vector<int> MakeRandomTrace(size_t length, int key_range, unsigned seed) {
-    srand(seed);
-    std::vector<int> trace;
+    std::mt19937 gen(seed);
 
+    std::uniform_int_distribution<int> key(1, key_range);
+
+    std::vector<int> trace;
     trace.reserve(length);
+
     for (size_t i = 0; i < length; i++) {
-        trace.push_back(rand() % key_range + 1);
+        trace.push_back(key(gen));
     }
 
     return trace;
 }
 
 std::vector<int> MakePhaseShift(int length, unsigned seed) {
-    srand(seed);
-    std::vector<int> trace;
+    std::mt19937 gen(seed);
 
+    std::uniform_int_distribution<int> percent(0, kPercentBase - 1);
+    std::uniform_int_distribution<int> hot_offset(0, 9);
+    std::uniform_int_distribution<int> any_key(1, 400);
+
+    std::vector<int> trace;
     trace.reserve(length);
+
     for (int i = 0; i < length; i++) {
         bool first_phase = (i < length / 2);
         int hot_low = first_phase ? 1 : 200;
-        if (rand() % kPercentBase < kHotAccessPercent) {
-            trace.push_back(hot_low + rand() % 10);
+        if (percent(gen) < kHotAccessPercent) {
+            trace.push_back(hot_low + hot_offset(gen));
         } else {
-            trace.push_back(rand() % 400 + 1);
+            trace.push_back(any_key(gen));
         }
     }
 
