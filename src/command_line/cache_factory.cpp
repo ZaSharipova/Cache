@@ -14,31 +14,31 @@ namespace CacheFactory {
 
 namespace {
 
-struct TypeName {
-    CacheType type;
-    const char* name;
-};
+    struct TypeName {
+        CacheType type;
+        const char* name;
+    };
 
-const TypeName kTypeNames[] = {
-    {CacheType::kLru, "lru"},
-    {CacheType::kLfu, "lfu"},
-    {CacheType::kTwoQ, "2q"},
-    {CacheType::kLirs, "lirs"},
-    {CacheType::kArc, "arc"},
-};
+    const TypeName kTypeNames[] = {
+        { CacheType::kLru, "lru" },
+        { CacheType::kLfu, "lfu" },
+        { CacheType::kTwoQ, "2q" },
+        { CacheType::kLirs, "lirs" },
+        { CacheType::kArc, "arc" },
+    };
 
-std::optional<CacheType> FindCacheType(const std::string& name) {
-    for (const TypeName& entry : kTypeNames) {
-        if (name == entry.name) {
-            return entry.type;
+    std::optional<CacheType> FindCacheType(const std::string& name) {
+        for (const TypeName& entry : kTypeNames) {
+            if (name == entry.name) {
+                return entry.type;
+            }
         }
+
+        return std::nullopt;
     }
 
-    return std::nullopt;
-}
-
-std::unique_ptr<Cache> MakeCache(const CacheSpec& spec) {
-    switch (spec.type) {
+    std::unique_ptr<Cache> MakeCache(const CacheSpec& spec) {
+        switch (spec.type) {
         case CacheType::kLru:
             return std::make_unique<LRUCache<int, int>>(spec.size);
         case CacheType::kLfu:
@@ -49,51 +49,52 @@ std::unique_ptr<Cache> MakeCache(const CacheSpec& spec) {
             return std::make_unique<LIRSCache<int, int>>(spec.size);
         case CacheType::kArc:
             return std::make_unique<ARCCache<int, int>>(spec.size);
+        }
+
+        return nullptr;
     }
 
-    return nullptr;
-}
+    Status ParseCacheSpec(std::string_view text, CacheSpec& spec) {
+        const size_t colon = text.find(':');
+        if (colon == std::string::npos) {
+            std::cerr << "error: expected <type>:<size>, got '" << text << "'\n";
+            return Status::kInvalidSpec;
+        }
 
-Status ParseCacheSpec(std::string_view text, CacheSpec& spec) {
-    const size_t colon = text.find(':');
-    if (colon == std::string::npos) {
-        std::cerr << "error: expected <type>:<size>, got '" << text << "'\n";
-        return Status::kInvalidSpec;
+        CacheSpec parsed;
+        const Status status = Parse::ParseSize(text.substr(colon + 1), "cache size", parsed.size);
+        if (status != Status::kOk) {
+            return status;
+        }
+
+        if (parsed.size == 0) {
+            std::cerr << "error: cache size must be positive in '" << text << "'\n";
+            return Status::kInvalidCacheSize;
+        }
+
+        const std::string type_name = Parse::ToLower(text.substr(0, colon));
+        if (auto type = FindCacheType(type_name); !type) {
+            std::cerr << "error: unknown cache type '" << type_name
+                      << "' (see --help)\n";
+            return Status::kUnknownCacheType;
+        } else {
+            parsed.type = *type;
+        }
+
+        spec = parsed;
+        return Status::kOk;
     }
 
-    CacheSpec parsed;
-    const Status status = Parse::ParseSize(text.substr(colon + 1), "cache size", parsed.size);
-    if (status != Status::kOk) {
-        return status;
+    std::vector<size_t> DefaultCosts(size_t level_count) {
+        std::vector<size_t> costs;
+        size_t cost = 1;
+        for (size_t i = 0; i <= level_count; i++) {
+            costs.push_back(cost);
+            cost *= 10;
+        }
+
+        return costs;
     }
-
-    if (parsed.size == 0) {
-        std::cerr << "error: cache size must be positive in '" << text << "'\n";
-        return Status::kInvalidCacheSize;
-    }
-
-    const std::string type_name = Parse::ToLower(text.substr(0, colon));
-    if (auto type = FindCacheType(type_name); !type) {
-        std::cerr << "error: unknown cache type '" << type_name << "' (see --help)\n";
-        return Status::kUnknownCacheType;
-    } else {
-        parsed.type = *type;
-    }
-
-    spec = parsed;
-    return Status::kOk;
-}
-
-std::vector<size_t> DefaultCosts(size_t level_count) {
-    std::vector<size_t> costs;
-    size_t cost = 1;
-    for (size_t i = 0; i <= level_count; i++) {
-        costs.push_back(cost);
-        cost *= 10;
-    }
-
-    return costs;
-}
 
 } // namespace
 
@@ -153,7 +154,8 @@ size_t TotalSize(const Setup& setup) {
     return total;
 }
 
-Status MakeMultiLevel(const Setup& setup, std::vector<size_t> costs, std::unique_ptr<MLCache>& out) {
+Status MakeMultiLevel(const Setup& setup, std::vector<size_t> costs,
+    std::unique_ptr<MLCache>& out) {
     if (costs.empty()) {
         costs = DefaultCosts(setup.size());
     }

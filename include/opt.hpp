@@ -28,9 +28,9 @@ size_t OPT(const std::vector<K>& trace, size_t cache_size) {
 
         } else {
             auto victim = std::max_element(cache.begin(), cache.end(),
-                                          [next_use](const K& a, const K& b){
-                                              return next_use(a) < next_use(b);
-                                          });
+                [next_use](const K& a, const K& b) {
+                    return next_use(a) < next_use(b);
+                });
 
             if (victim == cache.end()) {
                 continue;

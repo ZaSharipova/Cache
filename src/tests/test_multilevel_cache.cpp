@@ -1,8 +1,8 @@
 #include "2Qcache.hpp"
+#include "ICache.hpp"
 #include "lfu_cache.hpp"
 #include "lru_cache.hpp"
 #include "multilevel_cache.hpp"
-#include "ICache.hpp"
 
 #include <gtest/gtest.h>
 #include <vector>
@@ -12,7 +12,8 @@ using Cache = ICache<int, int>;
 using MLCache = MultiLevelCache<int, int>;
 
 template <typename C1, typename C2>
-MLCache MakeTwoLevel(size_t s1, size_t s2, std::vector<size_t> costs = {1, 10, 100}) {
+MLCache MakeTwoLevel(size_t s1, size_t s2,
+    std::vector<size_t> costs = { 1, 10, 100 }) {
     std::vector<std::unique_ptr<Cache>> levels;
     levels.push_back(std::make_unique<C1>(s1));
     levels.push_back(std::make_unique<C2>(s2));
@@ -85,7 +86,7 @@ TEST(MultiLevelCacheTest, ThreeLevels) {
     levels.push_back(std::make_unique<LRUCache<int, int>>(1));
     levels.push_back(std::make_unique<LRUCache<int, int>>(2));
     levels.push_back(std::make_unique<LRUCache<int, int>>(4));
-    MLCache cache(std::move(levels), {1, 10, 50, 200});
+    MLCache cache(std::move(levels), { 1, 10, 50, 200 });
 
     for (size_t k = 1; k <= 3; k++) {
         cache.Put(k, k * 10);

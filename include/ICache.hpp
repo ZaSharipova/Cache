@@ -5,7 +5,7 @@
 #include <optional>
 #include <string>
 
-template<typename K, typename V>
+template <typename K, typename V>
 class ICache {
 public:
     virtual ~ICache() = default;

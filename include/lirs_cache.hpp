@@ -8,7 +8,7 @@
 
 #include "ICache.hpp"
 
-template<typename K, typename V>
+template <typename K, typename V>
 class LIRSCache : public ICache<K, V> {
 public:
     using ICache<K, V>::evictions_;
@@ -17,37 +17,32 @@ private:
     static constexpr size_t kHirDivisor = 100;
 
 public:
-    LIRSCache(size_t capacity) : capacity_(capacity),
-                                 hir_limit_(std::max<size_t>(capacity / kHirDivisor, 1)),
-                                 lir_limit_(capacity - hir_limit_) {}
+    LIRSCache(size_t capacity)
+        : capacity_(capacity)
+        , hir_limit_(std::max<size_t>(capacity / kHirDivisor, 1))
+        , lir_limit_(capacity - hir_limit_) {
+    }
 
     void Put(K key, V value) override {
         auto it = table_.find(key);
-        if (it != table_.end()) {
-            auto& entry = it->second;
-            if (entry.is_resident) {
-                entry.value = value;
-                if (entry.is_lir) {
-                    MoveToStackTop(key);
-                } else if (entry.in_stack) {
-                    PromoteToLIR(key);
-                } else {
-                    RefreshHIR(key);
-                }
-
+        if (it == table_.end()) {
+            if (lir_count_ < lir_limit_) {
+                InsertNewLIR(key, value);
                 return;
             }
 
+            InsertNewHIR(key, value);
+            return;
+        }
+
+        auto& entry = it->second;
+        if (!entry.is_resident) {
             PromoteGhostToLIR(key, value);
             return;
         }
 
-        if (lir_count_ < lir_limit_) {
-            InsertNewLIR(key, value);
-            return;
-        }
-
-        InsertNewHIR(key, value);
+        entry.value = value;
+        Touch(key);
     }
 
     std::string GetName() const override {
@@ -79,10 +74,25 @@ private:
         if (entry.is_lir) {
             MoveToStackTop(key);
         } else {
-            (entry.in_stack) ? PromoteToLIR(key) : RefreshHIR(key);
+            if (entry.in_stack) {
+                PromoteToLIR(key);
+            } else {
+                RefreshHIR(key);
+            }
         }
 
         return table_.at(key).value;
+    }
+
+    void Touch(const K& key) {
+        const Entry& entry = table_.at(key);
+        if (entry.is_lir) {
+            MoveToStackTop(key);
+        } else if (entry.in_stack) {
+            PromoteToLIR(key);
+        } else {
+            RefreshHIR(key);
+        }
     }
 
     void Prune() {

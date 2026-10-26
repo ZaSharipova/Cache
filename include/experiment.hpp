@@ -20,9 +20,8 @@ struct Result {
 };
 
 Status RunSetup(const CacheFactory::Setup& setup, const std::vector<size_t>& costs,
-                const std::vector<int>& trace, int seed, Result& result);
+    const std::vector<int>& trace, int seed, Result& result);
 Result RunOpt(const std::vector<int>& trace, size_t capacity, int seed);
 Status RunExperiment(const CLI::Config& config, std::vector<Result>& results);
-
 
 #endif // EXPERIMENT_HPP_

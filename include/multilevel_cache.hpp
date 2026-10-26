@@ -15,7 +15,10 @@ template <typename K, typename V>
 class MultiLevelCache : public ICache<K, V> {
 public:
     MultiLevelCache(std::vector<std::unique_ptr<ICache<K, V>>> levels, std::vector<size_t> costs)
-                  : levels_(std::move(levels)), costs_(std::move(costs)), level_hits_(levels_.size(), 0) {}
+        : levels_(std::move(levels))
+        , costs_(std::move(costs))
+        , level_hits_(levels_.size(), 0) {
+    }
 
     void Put(K key, V value) override {
         for (auto& level : levels_) {
@@ -26,7 +29,8 @@ public:
     std::string GetName() const override {
         std::string name = levels_[0]->GetName();
         for (size_t i = 1; i < levels_.size(); i++) {
-            name += (" -> " + levels_[i]->GetName());
+            name += " -> ";
+            name += levels_[i]->GetName();
         }
 
         return name;
@@ -34,7 +38,7 @@ public:
 
     size_t GetCost() const {
         return std::inner_product(level_hits_.begin(), level_hits_.end(), costs_.begin(),
-                                  this->misses_ * costs_.back());
+            this->misses_ * costs_.back());
     }
 
     size_t GetLevelCount() const {

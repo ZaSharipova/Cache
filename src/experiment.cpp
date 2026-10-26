@@ -1,12 +1,12 @@
 #include "experiment.hpp"
-#include "subsidiary.hpp"
-#include "statuses.hpp"
 #include "opt.hpp"
+#include "statuses.hpp"
+#include "subsidiary.hpp"
 
 #include <cstddef>
 #include <numeric>
-#include <string>
 #include <set>
+#include <string>
 #include <vector>
 
 namespace {
@@ -23,8 +23,9 @@ static void Replay(CacheFactory::Cache& cache, const std::vector<int>& trace) {
 
 } // namespace
 
-Status RunSetup(const CacheFactory::Setup& setup, const std::vector<size_t>& costs,
-                const std::vector<int>& trace, int seed, Result& result) {
+Status RunSetup(const CacheFactory::Setup& setup,
+    const std::vector<size_t>& costs, const std::vector<int>& trace,
+    int seed, Result& result) {
     std::unique_ptr<CacheFactory::MLCache> cache;
     const Status status = CacheFactory::MakeMultiLevel(setup, costs, cache);
     if (status != Status::kOk) {
@@ -43,7 +44,7 @@ Status RunSetup(const CacheFactory::Setup& setup, const std::vector<size_t>& cos
     result.cost = cache->GetCost();
     result.seed = seed;
 
-    const size_t total_hits = std::accumulate(result.hits.begin(), result.hits.end(), size_t{0});
+    const size_t total_hits = std::accumulate(result.hits.begin(), result.hits.end(), size_t { 0 });
     result.hit_ratio = static_cast<double>(total_hits) / static_cast<double>(trace.size());
 
     return Status::kOk;
@@ -54,7 +55,7 @@ Result RunOpt(const std::vector<int>& trace, size_t capacity, int seed) {
 
     Result result;
     result.name = "OPT(" + std::to_string(capacity) + ")";
-    result.hits = {hits};
+    result.hits = { hits };
     result.misses = trace.size() - hits;
     result.hit_ratio = static_cast<double>(hits) / static_cast<double>(trace.size());
     result.seed = seed;
@@ -62,7 +63,8 @@ Result RunOpt(const std::vector<int>& trace, size_t capacity, int seed) {
     return result;
 }
 
-static std::set<size_t> DistinctTotalSizes(const std::vector<CacheFactory::Setup>& setups) {
+static std::set<size_t>
+DistinctTotalSizes(const std::vector<CacheFactory::Setup>& setups) {
     std::set<size_t> sizes;
     for (const CacheFactory::Setup& setup : setups) {
         sizes.insert(CacheFactory::TotalSize(setup));

@@ -10,27 +10,27 @@ namespace Parse {
 
 namespace {
 
-template <typename T>
-Status ParseNumber(std::string_view text, std::string_view what, T& out) {
-    T value = 0;
-    const char* const begin = text.data();
-    const char* const end = begin + text.size();
+    template <typename T>
+    Status ParseNumber(std::string_view text, std::string_view what, T& out) {
+        T value = 0;
+        const char* const begin = text.data();
+        const char* const end = begin + text.size();
 
-    const std::from_chars_result result = std::from_chars(begin, end, value);
+        const std::from_chars_result result = std::from_chars(begin, end, value);
 
-    if (result.ec == std::errc::result_out_of_range) {
-        std::cerr << "error: " << what << " is out of range: '" << text << "'\n";
-        return Status::kInvalidNumber;
+        if (result.ec == std::errc::result_out_of_range) {
+            std::cerr << "error: " << what << " is out of range: '" << text << "'\n";
+            return Status::kInvalidNumber;
+        }
+
+        if (result.ec != std::errc() || result.ptr != end) {
+            std::cerr << "error: invalid " << what << ": '" << text << "'\n";
+            return Status::kInvalidNumber;
+        }
+
+        out = value;
+        return Status::kOk;
     }
-
-    if (result.ec != std::errc() || result.ptr != end) {
-        std::cerr << "error: invalid " << what << ": '" << text << "'\n";
-        return Status::kInvalidNumber;
-    }
-
-    out = value;
-    return Status::kOk;
-}
 
 } // namespace
 

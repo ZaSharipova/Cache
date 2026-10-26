@@ -1,9 +1,9 @@
-#include "lru_cache.hpp"
-#include "lfu_cache.hpp"
 #include "2Qcache.hpp"
-#include "lirs_cache.hpp"
-#include "opt.hpp"
 #include "arc_cache.hpp"
+#include "lfu_cache.hpp"
+#include "lirs_cache.hpp"
+#include "lru_cache.hpp"
+#include "opt.hpp"
 
 #include <cstdlib>
 #include <gtest/gtest.h>
@@ -17,7 +17,7 @@ void Access(CacheT& cache, int key) {
     }
 }
 
-}  // namespace
+} // namespace
 
 TEST(LRUCacheTest, BasicPutGet) {
     LRUCache<int, int> cache(2);
@@ -152,13 +152,12 @@ TEST(TwoQCacheTest, ReinsertAfterEviction) {
 }
 
 TEST(OptTest, CyclicTrace) {
-    std::vector<int> trace = {1, 2, 3, 1, 2, 3, 1, 2, 3};
+    std::vector<int> trace = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
     EXPECT_EQ((OPT<int>(trace, 2)), 3);
 }
 
-
 TEST(OptTest, RepeatedKey) {
-    std::vector<int> trace = {1, 1, 1, 1};
+    std::vector<int> trace = { 1, 1, 1, 1 };
     EXPECT_EQ((OPT<int>(trace, 2)), 3);
 }
 
@@ -260,7 +259,7 @@ TEST(LIRSCacheTest, FrequentlyAccessedKeySurvivesScan) {
 
 TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKeys) {
     LIRSCache<int, int> cache(4);
-    const int hot_keys[] = {1, 2, 3};
+    const int hot_keys[] = { 1, 2, 3 };
 
     for (int k : hot_keys) {
         cache.Put(k, k * 10);
@@ -280,10 +279,12 @@ TEST(LIRSCacheTest, OneTimeScanKeysAreEvictedBeforeHotKeys) {
     }
 
     for (int key = 100; key < 109; key++) {
-        EXPECT_FALSE(cache.Get(key).has_value()) << "scan key " << key << " survived";
+        EXPECT_FALSE(cache.Get(key).has_value())
+            << "scan key " << key << " survived";
     }
 
-    EXPECT_TRUE(cache.Get(109).has_value()) << "scan key " << 109 << " should have survived";
+    EXPECT_TRUE(cache.Get(109).has_value())
+        << "scan key " << 109 << " should have survived";
 }
 
 TEST(LIRSCacheTest, ReinsertedGhostIsResidentHit) {
@@ -473,7 +474,7 @@ TEST(ARCCache, BeatsLruOnScanWithHotKeys) {
     LRUCache<int, int> lru(capacity);
 
     for (size_t pass = 0; pass < 2; pass++) {
-        for (int hot : {1, 2}) {
+        for (int hot : { 1, 2 }) {
             Access(arc, hot);
             Access(lru, hot);
         }
@@ -485,7 +486,7 @@ TEST(ARCCache, BeatsLruOnScanWithHotKeys) {
             Access(lru, 100 + round * 6 + i);
         }
 
-        for (size_t hot : {1, 2}) {
+        for (size_t hot : { 1, 2 }) {
             Access(arc, hot);
             Access(lru, hot);
         }
@@ -499,12 +500,12 @@ TEST(ARCCache, StatsAddUpToNumberOfGets) {
 
     const size_t gets = 1000;
     for (size_t i = 0; i < gets; i++) {
-        Access(cache, (i * 7) % 20 + 1);  // это псевдо-перемешанные ключи 1...20
+        Access(cache, (i * 7) % 20 + 1); // это псевдо-перемешанные ключи 1...20
     }
     EXPECT_EQ(cache.GetHits() + cache.GetMisses(), static_cast<size_t>(gets));
 }
 
-class ARCInvariants : public ::testing::TestWithParam<size_t> {};
+class ARCInvariants : public ::testing::TestWithParam<size_t> { };
 
 TEST_P(ARCInvariants, HoldOnCyclicTrace) {
     const size_t capacity = GetParam();
@@ -513,7 +514,8 @@ TEST_P(ARCInvariants, HoldOnCyclicTrace) {
 
     for (size_t i = 0; i < 5000; i++) {
         Access(cache, i % keys + 1);
-        ASSERT_TRUE(cache.CheckInvariants()) << "capacity=" << capacity << ", step=" << i;
+        ASSERT_TRUE(cache.CheckInvariants())
+            << "capacity=" << capacity << ", step=" << i;
     }
 }
 
@@ -524,7 +526,8 @@ TEST_P(ARCInvariants, HoldOnScrambledTrace) {
 
     for (size_t i = 0; i < 5000; i++) {
         Access(cache, (i * i) % keys + 1);
-        ASSERT_TRUE(cache.CheckInvariants()) << "capacity=" << capacity << ", step=" << i;
+        ASSERT_TRUE(cache.CheckInvariants())
+            << "capacity=" << capacity << ", step=" << i;
     }
 }
 
@@ -536,12 +539,13 @@ TEST_P(ARCInvariants, HoldOnHotPlusScanTrace) {
     for (size_t i = 0; i < 5000; i++) {
         bool hot = (i % 3 != 0);
         Access(cache, hot ? i % 4 + 1 : scan_key++);
-        ASSERT_TRUE(cache.CheckInvariants()) << "capacity=" << capacity << ", step=" << i;
+        ASSERT_TRUE(cache.CheckInvariants())
+            << "capacity=" << capacity << ", step=" << i;
     }
 }
 
 INSTANTIATE_TEST_SUITE_P(Capacities, ARCInvariants,
-                         ::testing::Values(1u, 2u, 3u, 8u, 50u));
+    ::testing::Values(1u, 2u, 3u, 8u, 50u));
 
 TEST(ARCCache, InvariantsHoldOnScanAndHotMix) {
     ARCCache<int, int> cache(8);

@@ -8,12 +8,14 @@
 
 #include "ICache.hpp"
 
-template<typename K, typename V>
+template <typename K, typename V>
 class LRUCache : public ICache<K, V> {
 public:
     using ICache<K, V>::evictions_;
 
-    LRUCache(size_t capacity) : capacity_(capacity) {}
+    LRUCache(size_t capacity)
+        : capacity_(capacity) {
+    }
 
     void Put(K key, V value) override {
         if (auto it = pos_.find(key); it != pos_.end()) {
@@ -30,7 +32,7 @@ public:
             evictions_++;
         }
 
-        order_.push_front({key, value});
+        order_.push_front({ key, value });
         pos_[key] = order_.begin();
     }
 

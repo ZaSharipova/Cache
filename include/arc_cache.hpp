@@ -14,7 +14,9 @@ class ARCCache : public ICache<K, V> {
 public:
     using ICache<K, V>::evictions_;
 
-    ARCCache(size_t capacity) : capacity_(capacity) {}
+    ARCCache(size_t capacity)
+        : capacity_(capacity) {
+    }
 
     void Put(K key, V value) override {
         if (capacity_ == 0) {
@@ -29,16 +31,16 @@ public:
 
         Node& node = it->second;
         switch (node.location) {
-            case (Location::kT1):
-            case (Location::kT2):
-                node.data_it->value = value;
-                MoveToT2Front(node);
-                break;
+        case (Location::kT1):
+        case (Location::kT2):
+            node.data_it->value = value;
+            MoveToT2Front(node);
+            break;
 
-            case (Location::kB1):
-            case (Location::kB2):
-                PromoteFromGhost(key, node, value);
-                break;
+        case (Location::kB1):
+        case (Location::kB2):
+            PromoteFromGhost(key, node, value);
+            break;
         }
     }
 
@@ -54,11 +56,7 @@ public:
         const size_t t1_b1_size = t1_.size() + b1_.size();
         const size_t total_size = t1_b1_size + t2_.size() + b2_.size();
 
-        return Size() <= capacity_ &&
-               t1_b1_size <= capacity_ &&
-               total_size <= 2 * capacity_ &&
-               t1_target_size_ <= capacity_ &&
-               table_.size() == total_size;
+        return Size() <= capacity_ && t1_b1_size <= capacity_ && total_size <= 2 * capacity_ && t1_target_size_ <= capacity_ && table_.size() == total_size;
     }
 
 private:
@@ -88,15 +86,15 @@ private:
 
         Node& node = it->second;
         switch (node.location) {
-            case (Location::kT1):
-            case (Location::kT2):
-                MoveToT2Front(node);
-                return node.data_it->value;
+        case (Location::kT1):
+        case (Location::kT2):
+            MoveToT2Front(node);
+            return node.data_it->value;
 
-            case (Location::kB1):
-            case (Location::kB2):
-            default:
-                return std::nullopt;
+        case (Location::kB1):
+        case (Location::kB2):
+        default:
+            return std::nullopt;
         }
     }
 
@@ -122,7 +120,7 @@ private:
 
         Replace(node.location == Location::kB2);
 
-        t2_.push_front({key, value});
+        t2_.push_front({ key, value });
         node.location = Location::kT2;
         node.data_it = t2_.begin();
     }
@@ -150,13 +148,12 @@ private:
             Replace(false);
         }
 
-        t1_.push_front({key, value});
-        table_.emplace(key, Node{Location::kT1, t1_.begin(), {}});
+        t1_.push_front({ key, value });
+        table_.emplace(key, Node { Location::kT1, t1_.begin(), { } });
     }
 
     void Replace(bool key_in_b2) {
-        bool replace_from_t1 = !t1_.empty() && (t1_.size() > t1_target_size_
-                               || (key_in_b2 && t1_.size() == t1_target_size_));
+        bool replace_from_t1 = !t1_.empty() && (t1_.size() > t1_target_size_ || (key_in_b2 && t1_.size() == t1_target_size_));
         if (t2_.empty()) {
             replace_from_t1 = true;
         }

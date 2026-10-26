@@ -4,8 +4,8 @@
 #include "statuses.hpp"
 #include "subsidiary.hpp"
 
-#include "report.hpp"
 #include "experiment.hpp"
+#include "report.hpp"
 
 #include <cstddef>
 #include <iostream>
@@ -14,9 +14,7 @@ namespace {
 
 constexpr int kReportedSeed = 1;
 
-int ExitCode(Status status) {
-    return static_cast<int>(status);
-}
+int ExitCode(Status status) { return static_cast<int>(status); }
 
 } // namespace
 

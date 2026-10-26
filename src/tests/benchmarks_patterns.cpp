@@ -1,18 +1,18 @@
-#include "lru_cache.hpp"
-#include "lfu_cache.hpp"
 #include "2Qcache.hpp"
-#include "lirs_cache.hpp"
-#include "opt.hpp"
 #include "arc_cache.hpp"
+#include "lfu_cache.hpp"
+#include "lirs_cache.hpp"
+#include "lru_cache.hpp"
+#include "opt.hpp"
 
 #include "subsidiary.hpp"
 
-#include <iostream>
-#include <iomanip>
-#include <vector>
-#include <string>
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace {
 
@@ -40,7 +40,8 @@ double OptRatio(const std::vector<K>& trace, size_t cache_size) {
 }
 
 template <typename K, typename V>
-PatternResult RunPattern(const std::string& name, const std::vector<K>& trace, size_t capacity) {
+PatternResult RunPattern(const std::string& name, const std::vector<K>& trace,
+    size_t capacity) {
     PatternResult result;
     result.name = name;
     {
@@ -68,25 +69,22 @@ PatternResult RunPattern(const std::string& name, const std::vector<K>& trace, s
 }
 
 void PrintPattern(const PatternResult& result) {
-    std::cout << std::left << std::setw(10) << result.name
-              << std::right << std::fixed << std::setprecision(3)
-              << std::setw(8) << result.lru
-              << std::setw(8) << result.lfu
-              << std::setw(8) << result.twoq
-              << std::setw(8) << result.lirs
-              << std::setw(8) << result.arc
-              << std::setw(8) << result.opt
-              << "\n";
+    std::cout << std::left << std::setw(10) << result.name << std::right
+              << std::fixed << std::setprecision(3) << std::setw(8) << result.lru
+              << std::setw(8) << result.lfu << std::setw(8) << result.twoq
+              << std::setw(8) << result.lirs << std::setw(8) << result.arc
+              << std::setw(8) << result.opt << "\n";
 }
 
-void WriteCsv(const std::string& path, const std::vector<PatternResult>& results) {
+void WriteCsv(const std::string& path,
+    const std::vector<PatternResult>& results) {
     std::ofstream out(path);
     out << "pattern,LRU,LFU,2Q,LIRS,ARC,OPT,seed\n";
 
     for (const PatternResult& result : results) {
-        out << result.name << "," << result.lru << "," << result.lfu << "," << result.twoq << ","
-            << result.lirs << "," << result.arc << "," << result.opt << ","
-            << result.seed << "\n";
+        out << result.name << "," << result.lru << "," << result.lfu << ","
+            << result.twoq << "," << result.lirs << "," << result.arc << ","
+            << result.opt << "," << result.seed << "\n";
     }
 }
 
@@ -101,10 +99,14 @@ int main() {
     for (int seed = 1; seed <= n_seeds; seed++) {
         size_t begin = results.size();
 
-        results.push_back(RunPattern<int, int>("scan", MakeScan(20, length), capacity));
-        results.push_back(RunPattern<int, int>("hot", MakeHot(100, length, seed), capacity));
-        results.push_back(RunPattern<int, int>("mixed", MakeMixed(length, seed), capacity));
-        results.push_back(RunPattern<int, int>("phase", MakePhaseShift(length, seed), capacity));
+        results.push_back(
+            RunPattern<int, int>("scan", MakeScan(20, length), capacity));
+        results.push_back(
+            RunPattern<int, int>("hot", MakeHot(100, length, seed), capacity));
+        results.push_back(
+            RunPattern<int, int>("mixed", MakeMixed(length, seed), capacity));
+        results.push_back(
+            RunPattern<int, int>("phase", MakePhaseShift(length, seed), capacity));
 
         for (size_t i = begin; i < results.size(); i++) {
             results[i].seed = seed;
@@ -113,12 +115,9 @@ int main() {
 
     std::cout << "Cache size: " << capacity << ", trace length: " << length
               << ", seeds: " << n_seeds << "\n\n";
-    std::cout << std::left << std::setw(10) << "pattern"
-              << std::right << std::setw(8) << "LRU"
-              << std::setw(8) << "LFU"
-              << std::setw(8) << "2Q"
-              << std::setw(8) << "LIRS"
-              << std::setw(8) << "ARC"
+    std::cout << std::left << std::setw(10) << "pattern" << std::right
+              << std::setw(8) << "LRU" << std::setw(8) << "LFU" << std::setw(8)
+              << "2Q" << std::setw(8) << "LIRS" << std::setw(8) << "ARC"
               << std::setw(8) << "OPT" << "\n";
     std::cout << std::string(60, '-') << "\n";
 

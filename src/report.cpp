@@ -1,6 +1,6 @@
 #include "report.hpp"
-#include "experiment.hpp"
 #include "command_line/statuses.hpp"
+#include "experiment.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -25,10 +25,10 @@ size_t MaxLevels(const std::vector<Result>& results) {
 
 void PrintTable(const std::vector<Result>& results, int seed) {
     constexpr int kLevelWidth = 8;
-    constexpr int kMissWidth  = 8;
+    constexpr int kMissWidth = 8;
     constexpr int kRatioWidth = 10;
-    constexpr int kCostWidth  = 12;
-    constexpr int kTailWidth  = kMissWidth + kRatioWidth + kCostWidth;
+    constexpr int kCostWidth = 12;
+    constexpr int kTailWidth = kMissWidth + kRatioWidth + kCostWidth;
     constexpr std::string_view kNameHeader = "config";
 
     int name_width = static_cast<int>(kNameHeader.size());
@@ -45,13 +45,10 @@ void PrintTable(const std::vector<Result>& results, int seed) {
         std::cout << std::setw(kLevelWidth) << ("L" + std::to_string(i));
     }
 
-    std::cout << std::setw(kMissWidth) << "miss"
-              << std::setw(kRatioWidth) << "hit_ratio"
-              << std::setw(kCostWidth) << "cost" << "\n";
+    std::cout << std::setw(kMissWidth) << "miss" << std::setw(kRatioWidth)
+              << "hit_ratio" << std::setw(kCostWidth) << "cost" << "\n";
 
-    const size_t rule_width = static_cast<size_t>(name_width)
-                            + static_cast<size_t>(kLevelWidth) * levels
-                            + static_cast<size_t>(kTailWidth);
+    const size_t rule_width = static_cast<size_t>(name_width) + static_cast<size_t>(kLevelWidth) * levels + static_cast<size_t>(kTailWidth);
     std::cout << std::string(rule_width, '-') << "\n";
     std::cout << std::fixed << std::setprecision(3);
 
@@ -60,9 +57,11 @@ void PrintTable(const std::vector<Result>& results, int seed) {
             continue;
         }
 
-        std::cout << std::left << std::setw(name_width) << result.name << std::right;
+        std::cout << std::left << std::setw(name_width) << result.name
+                  << std::right;
         for (size_t i = 0; i < levels; i++) {
-            std::cout << std::setw(kLevelWidth) << (i < result.hits.size() ? result.hits[i] : 0);
+            std::cout << std::setw(kLevelWidth)
+                      << (i < result.hits.size() ? result.hits[i] : 0);
         }
         std::cout << std::setw(kMissWidth) << result.misses
                   << std::setw(kRatioWidth) << result.hit_ratio
@@ -91,8 +90,8 @@ Status WriteCsv(const std::string& path, const std::vector<Result>& results) {
             out << "," << (i < result.hits.size() ? result.hits[i] : 0);
         }
 
-        out << "," << result.misses << "," << result.hit_ratio << ","
-            << result.cost << "," << result.seed << "\n";
+        out << "," << result.misses << "," << result.hit_ratio << "," << result.cost
+            << "," << result.seed << "\n";
     }
 
     out.flush();

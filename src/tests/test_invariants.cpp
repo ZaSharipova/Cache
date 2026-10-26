@@ -1,9 +1,9 @@
-#include "lfu_cache.hpp"
 #include "2Qcache.hpp"
+#include "arc_cache.hpp"
+#include "lfu_cache.hpp"
 #include "lirs_cache.hpp"
 #include "lru_cache.hpp"
 #include "opt.hpp"
-#include "arc_cache.hpp"
 #include "subsidiary.hpp"
 
 #include <cstdlib>
@@ -30,10 +30,12 @@ size_t RunAndGetHits(CacheT& cache, const std::vector<K>& trace) {
 
 } // namespace
 
-using CacheTypes = ::testing::Types<LFUCache<int, int>, TwoQCache<int, int>, LIRSCache<int, int>, LRUCache<int, int>, ARCCache<int, int>>;
+using CacheTypes = ::testing::Types<LFUCache<int, int>, TwoQCache<int, int>,
+    LIRSCache<int, int>, LRUCache<int, int>,
+    ARCCache<int, int>>;
 
 template <typename CacheT>
-class InvariantTest : public ::testing::Test {};
+class InvariantTest : public ::testing::Test { };
 
 TYPED_TEST_SUITE(InvariantTest, CacheTypes);
 

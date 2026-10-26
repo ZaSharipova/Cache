@@ -36,8 +36,8 @@ std::vector<int> MakeMixed(int length, unsigned seed) {
     std::mt19937 gen(seed);
 
     std::uniform_int_distribution<int> hot_chance(0, kMixedHotChanceOutOf - 1);
-    std::uniform_int_distribution<int> hot_key(kFirstKey,
-                                               kFirstKey + kMixedHotKeysCount - 1);
+    std::uniform_int_distribution<int> hot_key(
+        kFirstKey, kFirstKey + kMixedHotKeysCount - 1);
 
     std::vector<int> trace;
     trace.reserve(length);
@@ -62,19 +62,16 @@ std::vector<int> MakeHot(int num_keys, int length, unsigned seed) {
 
     std::uniform_int_distribution<int> percent(0, kPercentBase - 1);
     std::uniform_int_distribution<int> hot_key(kFirstKey,
-                                               kFirstKey + kHotKeysCount - 1);
+        kFirstKey + kHotKeysCount - 1);
     std::uniform_int_distribution<int> any_key(kFirstKey,
-                                               kFirstKey + num_keys - 1);
+        kFirstKey + num_keys - 1);
 
     std::vector<int> trace;
     trace.reserve(length);
 
     for (int i = 0; i < length; i++) {
-        if (percent(gen) < kHotAccessPercent) {
-            trace.push_back(hot_key(gen));
-        } else {
-            trace.push_back(any_key(gen));
-        }
+        bool is_hot_key = percent(gen) < kHotAccessPercent;
+        trace.push_back(is_hot_key ? hot_key(gen) : any_key(gen));
     }
 
     return trace;
@@ -108,11 +105,8 @@ std::vector<int> MakePhaseShift(int length, unsigned seed) {
     for (int i = 0; i < length; i++) {
         bool first_phase = (i < length / 2);
         int hot_low = first_phase ? 1 : 200;
-        if (percent(gen) < kHotAccessPercent) {
-            trace.push_back(hot_low + hot_offset(gen));
-        } else {
-            trace.push_back(any_key(gen));
-        }
+        bool is_hot_key = percent(gen) < kHotAccessPercent;
+        trace.push_back(is_hot_key ? hot_low + hot_offset(gen) : any_key(gen));
     }
 
     return trace;

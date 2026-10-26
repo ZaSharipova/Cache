@@ -9,7 +9,7 @@
 
 #include "ICache.hpp"
 
-template<typename K, typename V>
+template <typename K, typename V>
 class TwoQCache : public ICache<K, V> {
 public:
     using key_type = K;
@@ -21,9 +21,11 @@ private:
     static constexpr size_t kA1outDivisor = 2;
 
 public:
-    TwoQCache(size_t capacity) : a1in_limit_(std::max<size_t>(capacity / kA1inDivisor, 1)),
-                                 am_limit_(capacity - a1in_limit_),
-                                 a1out_limit_(std::max<size_t>(capacity / kA1outDivisor, 1)) {}
+    TwoQCache(size_t capacity)
+        : a1in_limit_(std::max<size_t>(capacity / kA1inDivisor, 1))
+        , am_limit_(capacity - a1in_limit_)
+        , a1out_limit_(std::max<size_t>(capacity / kA1outDivisor, 1)) {
+    }
 
     void Put(K key, V value) override {
         auto it = table_.find(key);
@@ -34,22 +36,23 @@ public:
 
         Entry& entry = it->second;
         switch (entry.location) {
-            case (Location::kAm):
-                UpdateInAm(entry, value);
-                break;
+        case (Location::kAm):
+            UpdateInAm(entry, value);
+            break;
 
-            case (Location::kA1in):
-                UpdateInA1in(entry, value);
-                break;
+        case (Location::kA1in):
+            UpdateInA1in(entry, value);
+            break;
 
-            case (Location::kA1out): {
-                PromoteFromA1out(key, entry, value);
-                break;;
-            }
+        case (Location::kA1out): {
+            PromoteFromA1out(key, entry, value);
+            break;
+            ;
+        }
 
-            default:
-                assert(0);
-                std::cerr << "Invalid location\n";
+        default:
+            assert(0);
+            std::cerr << "Invalid location\n";
         }
     }
 
@@ -79,18 +82,18 @@ private:
         }
 
         Entry& entry = it->second;
-        switch(entry.location) {
-            case (Location::kAm):
-                am_.splice(am_.begin(), am_, entry.data_it);
-                entry.data_it = am_.begin();
-                return entry.data_it->second;
+        switch (entry.location) {
+        case (Location::kAm):
+            am_.splice(am_.begin(), am_, entry.data_it);
+            entry.data_it = am_.begin();
+            return entry.data_it->second;
 
-            case (Location::kA1in):
-                return entry.data_it->second;
+        case (Location::kA1in):
+            return entry.data_it->second;
 
-            case (Location::kA1out):
-            default:
-                return std::nullopt;
+        case (Location::kA1out):
+        default:
+            return std::nullopt;
         }
     }
 
@@ -111,7 +114,7 @@ private:
             EvictFromAm();
         }
 
-        am_.push_front({key, value});
+        am_.push_front({ key, value });
         entry.location = Location::kAm;
         entry.data_it = am_.begin();
         entry.value = value;
@@ -122,7 +125,7 @@ private:
             EvictFromA1in();
         }
 
-        a1in_.push_front({key, value});
+        a1in_.push_front({ key, value });
         Entry entry;
         entry.value = value;
         entry.location = Location::kA1in;
@@ -143,7 +146,7 @@ private:
         evictions_++;
 
         a1out_.push_front(old_key);
-        Entry &old_entry = table_.at(old_key);
+        Entry& old_entry = table_.at(old_key);
         old_entry.location = Location::kA1out;
         old_entry.ghost_it = a1out_.begin();
 

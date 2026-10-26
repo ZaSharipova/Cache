@@ -14,7 +14,9 @@ class LFUCache : public ICache<K, V> {
 public:
     using ICache<K, V>::evictions_;
 
-    LFUCache(size_t capacity) : capacity_(capacity) {}
+    LFUCache(size_t capacity)
+        : capacity_(capacity) {
+    }
 
     void Put(K key, V value) override {
         auto it = data_.find(key);
@@ -37,7 +39,7 @@ public:
             }
         }
 
-        data_[key] = {value, 1};
+        data_[key] = { value, 1 };
     }
 
     std::string GetName() const override {
